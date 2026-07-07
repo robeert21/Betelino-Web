@@ -1,16 +1,69 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useCart } from "./CartContext";
 import { submitShopCart } from "./actions";
+
+const PANEL_EXIT_DURATION = 220;
+const LINE_EXIT_DURATION = 180;
+const FOCUS_RING =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep";
 
 export function CartPanel() {
   const { lines, totalItems, setQuantity, removeFromCart, clearCart } = useCart();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const shouldShow = totalItems > 0 || sent;
+  const [mounted, setMounted] = useState(shouldShow);
+  const [closing, setClosing] = useState(false);
+  const panelExitTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lineExitTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  if (totalItems === 0 && !sent) return null;
+  useEffect(() => {
+    if (shouldShow) {
+      if (panelExitTimeout.current) clearTimeout(panelExitTimeout.current);
+      setClosing(false);
+      setMounted(true);
+      return;
+    }
+    if (mounted) {
+      setClosing(true);
+      panelExitTimeout.current = setTimeout(() => {
+        setMounted(false);
+        setClosing(false);
+      }, PANEL_EXIT_DURATION);
+    }
+    return () => {
+      if (panelExitTimeout.current) clearTimeout(panelExitTimeout.current);
+    };
+  }, [shouldShow, mounted]);
+
+  useEffect(() => {
+    return () => {
+      if (lineExitTimeout.current) clearTimeout(lineExitTimeout.current);
+    };
+  }, []);
+
+  if (!mounted) return null;
+
+  function handleRemove(itemId: string) {
+    setRemovingId(itemId);
+    if (lineExitTimeout.current) clearTimeout(lineExitTimeout.current);
+    lineExitTimeout.current = setTimeout(() => {
+      removeFromCart(itemId);
+      setRemovingId(null);
+    }, LINE_EXIT_DURATION);
+  }
+
+  function handleDecrement(itemId: string, quantity: number) {
+    if (quantity <= 1) {
+      handleRemove(itemId);
+    } else {
+      setQuantity(itemId, quantity - 1);
+    }
+  }
 
   function handleSubmit() {
     setError(null);
@@ -28,74 +81,104 @@ export function CartPanel() {
   }
 
   return (
-    <div className="animate-fade-in sticky bottom-6 z-10 mt-12 rounded-[16px] border border-border-sand bg-warm-cream p-6 shadow-lg">
-      {sent ? (
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm font-semibold text-sage-deep">
-            Cererea a fost trimisă către lideri.
-          </p>
-          <button
-            type="button"
-            onClick={() => setSent(false)}
-            className="rounded-full bg-border-sand px-4 py-2 text-xs font-semibold text-ink-umber hover:bg-soft-linen"
-          >
-            Închide
-          </button>
-        </div>
-      ) : (
-        <>
-          <h2 className="font-display text-base font-medium text-ink-umber">
-            Coșul tău ({totalItems} {totalItems === 1 ? "obiect" : "obiecte"})
-          </h2>
+    <div
+      className={`sticky bottom-6 z-10 mt-12 rounded-[16px] border border-border-sand bg-warm-cream p-6 shadow-lg transition-[opacity,transform] duration-[220ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        closing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
+      }`}
+    >
+      <div key={sent ? "sent" : "cart"} className="animate-fade-in">
+        {sent ? (
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm font-semibold text-sage-deep">
+              Cererea a fost trimisă către lideri.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSent(false)}
+              className={`rounded-full bg-border-sand px-4 py-2 text-xs font-semibold text-ink-umber transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-soft-linen ${FOCUS_RING}`}
+            >
+              Închide
+            </button>
+          </div>
+        ) : (
+          <>
+            <h2 className="font-display text-base font-medium text-ink-umber">
+              Coșul tău ({totalItems} {totalItems === 1 ? "obiect" : "obiecte"})
+            </h2>
 
-          <div className="mt-4 flex flex-col gap-3">
-            {lines.map((line) => (
-              <div key={line.item.id} className="flex items-center justify-between gap-4">
-                <p className="text-sm text-ink-umber">{line.item.title}</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center rounded-full border border-border-sand">
+            <div className="mt-4 flex flex-col gap-3">
+              {lines.map((line) => (
+                <div
+                  key={line.item.id}
+                  className={`flex items-center justify-between gap-4 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                    removingId === line.item.id
+                      ? "-translate-x-2 opacity-0"
+                      : "translate-x-0 opacity-100"
+                  }`}
+                >
+                  <p className="text-sm text-ink-umber">{line.item.title}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center rounded-full border border-border-sand">
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => handleDecrement(line.item.id, line.quantity)}
+                        aria-label={`Scade cantitatea pentru ${line.item.title}`}
+                        className={`px-2.5 py-1.5 text-sm font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 disabled:opacity-40 ${FOCUS_RING}`}
+                      >
+                        −
+                      </button>
+                      <span className="min-w-[1.5rem] text-center text-sm tabular-nums text-ink-umber">
+                        {line.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => setQuantity(line.item.id, line.quantity + 1)}
+                        aria-label={`Crește cantitatea pentru ${line.item.title}`}
+                        className={`px-2.5 py-1.5 text-sm font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 disabled:opacity-40 ${FOCUS_RING}`}
+                      >
+                        +
+                      </button>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setQuantity(line.item.id, line.quantity - 1)}
-                      className="px-2.5 py-1.5 text-sm font-semibold text-ink-umber"
+                      disabled={isPending}
+                      onClick={() => handleRemove(line.item.id)}
+                      aria-label={`Șterge ${line.item.title} din coș`}
+                      className={`text-xs font-semibold text-signal-red transition-opacity duration-150 hover:opacity-70 disabled:opacity-40 ${FOCUS_RING}`}
                     >
-                      −
-                    </button>
-                    <span className="min-w-[1.5rem] text-center text-sm tabular-nums text-ink-umber">
-                      {line.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity(line.item.id, line.quantity + 1)}
-                      className="px-2.5 py-1.5 text-sm font-semibold text-ink-umber disabled:opacity-40"
-                    >
-                      +
+                      Șterge
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeFromCart(line.item.id)}
-                    className="text-xs font-semibold text-signal-red"
-                  >
-                    Șterge
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {error && <p className="mt-3 text-xs text-signal-red">{error}</p>}
+            {error && (
+              <p key={error} className="animate-fade-in mt-3 text-xs text-signal-red">
+                {error}
+              </p>
+            )}
 
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={handleSubmit}
-            className="mt-5 w-full rounded-full bg-amber-glow px-6 py-3.5 text-base font-semibold text-ink-umber transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-amber-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isPending ? "Se trimite…" : "Trimite cererea"}
-          </button>
-        </>
-      )}
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleSubmit}
+              className={`mt-5 w-full rounded-full bg-amber-glow px-6 py-3.5 text-base font-semibold text-ink-umber transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-amber-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS_RING}`}
+            >
+              {isPending ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink-umber/30 border-t-ink-umber" />
+                  Se trimite…
+                </span>
+              ) : (
+                "Trimite cererea"
+              )}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }

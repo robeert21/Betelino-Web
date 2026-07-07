@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { users, passwordResetTokens } from "@/db/schema";
@@ -10,6 +11,7 @@ import {
   hashPassword,
   verifyPassword,
 } from "@/lib/auth";
+import { sendPasswordResetEmail } from "@/lib/email";
 import { generateUniqueUsername } from "@/lib/username";
 import {
   loginSchema,
@@ -148,9 +150,18 @@ export async function requestPasswordResetAction(
     expiresAt: new Date(Date.now() + RESET_TOKEN_DURATION_MS),
   });
 
-  // No email provider is configured yet for Betelino. Until one is wired up
-  // (e.g. Resend), surface the reset link directly so the flow is testable.
-  const devResetLink = `/cont/reseteaza-parola/${token}`;
+  const resetPath = `/cont/reseteaza-parola/${token}`;
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("host");
+  const protocol = host?.startsWith("localhost") ? "http" : "https";
+  const resetUrl = `${protocol}://${host}${resetPath}`;
+
+  const { sent } = await sendPasswordResetEmail(email, resetUrl);
+
+  // If no email provider is configured (e.g. local dev without
+  // RESEND_API_KEY), surface the reset link directly so the flow stays
+  // testable without a real inbox.
+  const devResetLink = sent ? undefined : resetPath;
 
   return { message: genericMessage, devResetLink };
 }

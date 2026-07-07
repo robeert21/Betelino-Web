@@ -73,7 +73,15 @@ const PODIUM_STYLES = [
 // Visual podium order: 2nd, 1st, 3rd
 const PODIUM_ORDER = [1, 0, 2];
 
-function PodiumSlot({ team, rank }: { team: LeaderboardTeam; rank: number }) {
+function PodiumSlot({
+  team,
+  rank,
+  delay,
+}: {
+  team: LeaderboardTeam;
+  rank: number;
+  delay: number;
+}) {
   const style = PODIUM_STYLES[rank];
   return (
     <div className="flex flex-col items-center">
@@ -107,7 +115,8 @@ function PodiumSlot({ team, rank }: { team: LeaderboardTeam; rank: number }) {
         {team.points.toLocaleString("ro-RO")} pct
       </p>
       <div
-        className={`w-full rounded-t-[14px] border border-b-0 bg-forest-mist/30 ${style.barHeight} ${style.barBorder}`}
+        className={`animate-grow-y w-full rounded-t-[14px] border border-b-0 bg-forest-mist/30 ${style.barHeight} ${style.barBorder}`}
+        style={{ animationDelay: `${delay}s` }}
       />
     </div>
   );
@@ -151,10 +160,17 @@ export default async function ClasamentPage() {
             </p>
           ) : (
             <div className="mx-auto mt-14 grid max-w-[820px] grid-cols-3 items-end gap-5 pb-0">
-              {PODIUM_ORDER.map((rank) => {
+              {PODIUM_ORDER.map((rank, position) => {
                 const team = podium[rank];
                 if (!team) return <div key={rank} />;
-                return <PodiumSlot key={team.id} team={team} rank={rank} />;
+                return (
+                  <PodiumSlot
+                    key={team.id}
+                    team={team}
+                    rank={rank}
+                    delay={0.3 + position * 0.12}
+                  />
+                );
               })}
             </div>
           )}
@@ -197,8 +213,11 @@ export default async function ClasamentPage() {
                       </p>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-border-sand">
                         <div
-                          className="h-full rounded-full bg-sage-trust"
-                          style={{ width: `${progress}%` }}
+                          className="animate-grow-x h-full rounded-full bg-sage-trust"
+                          style={{
+                            width: `${progress}%`,
+                            animationDelay: `${0.15 + Math.min(index, 6) * 0.05}s`,
+                          }}
                         />
                       </div>
                     </div>

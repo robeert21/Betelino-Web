@@ -46,6 +46,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Impeccable live-mode local config
+.impeccable/
+
 # System Files
 .DS_Store
 .DS_Store?

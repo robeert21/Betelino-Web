@@ -21,8 +21,8 @@ export function RequestResetForm() {
           <p>{state.message}</p>
           {state.devResetLink && (
             <p className="mt-2 text-ink-umber-soft">
-              Niciun serviciu de email nu este conectat încă, așa că link-ul
-              de test apare direct aici:{" "}
+              Serviciul de email nu este configurat în acest mediu, așa că
+              link-ul de test apare direct aici:{" "}
               <Link
                 href={state.devResetLink}
                 className="font-semibold text-sage-deep hover:text-sage-trust"

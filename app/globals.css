@@ -90,6 +90,34 @@ html {
   animation-delay: 0.24s;
 }
 
+@keyframes grow-bar-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes grow-bar-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.animate-grow-x {
+  transform-origin: left;
+  animation: grow-bar-x 0.8s var(--ease-out-expo) both;
+}
+
+.animate-grow-y {
+  transform-origin: bottom;
+  animation: grow-bar-y 0.7s var(--ease-out-expo) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
