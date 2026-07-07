@@ -20,6 +20,9 @@ export default async function ContPage() {
 
   const rows = [
     { label: "Nume complet", value: account.fullName },
+    ...(account.username
+      ? [{ label: "Utilizator", value: account.username }]
+      : []),
     { label: "Echipă", value: account.teamName },
     {
       label: "Puncte individuale",

@@ -8,11 +8,11 @@ export function GameTabs({ categories }: { categories: GameCategory[] }) {
   const active = categories.find((category) => category.slug === activeSlug) ?? categories[0];
 
   return (
-    <div className="mt-10">
+    <div className="mt-10 grid gap-10 md:grid-cols-[260px_1fr] md:gap-14 lg:grid-cols-[300px_1fr] lg:gap-20">
       <div
         role="tablist"
         aria-label="Categorii de jocuri"
-        className="flex flex-wrap gap-2"
+        className="flex flex-wrap gap-2.5 md:sticky md:top-24 md:flex-col md:items-start md:self-start md:gap-2"
       >
         {categories.map((category) => {
           const isActive = category.slug === activeSlug;
@@ -23,9 +23,9 @@ export function GameTabs({ categories }: { categories: GameCategory[] }) {
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveSlug(category.slug)}
-              className={`min-h-[44px] rounded-full px-5 py-2 text-[0.8125rem] font-semibold uppercase tracking-[0.04em] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              className={`min-h-[48px] rounded-full px-6 py-2.5 text-sm font-semibold uppercase tracking-[0.04em] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] md:w-full md:text-left ${
                 isActive
-                  ? "bg-sage-trust text-warm-cream"
+                  ? "bg-forest-night text-warm-cream"
                   : "bg-soft-linen text-ink-umber-soft hover:text-ink-umber"
               }`}
             >
@@ -35,28 +35,28 @@ export function GameTabs({ categories }: { categories: GameCategory[] }) {
         })}
       </div>
 
-      <div key={active.slug} className="animate-fade-in mt-10">
-        <p className="max-w-[65ch] leading-relaxed text-ink-umber-soft">
+      <div key={active.slug} className="animate-fade-in min-w-0">
+        <p className="max-w-[75ch] text-lg leading-relaxed text-ink-umber-soft">
           {active.description}
         </p>
 
-        <div className="mt-8 divide-y divide-border-sand">
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
           {active.games.map((game, index) => (
             <section
               key={game.slug}
-              className="animate-fade-in py-10 first:pt-0"
-              style={{ animationDelay: `${0.05 + index * 0.08}s` }}
+              className="animate-fade-in rounded-[16px] bg-soft-linen p-7 md:p-8"
+              style={{ animationDelay: `${0.05 + Math.min(index, 4) * 0.08}s` }}
             >
-              <h2 className="text-xl font-semibold text-ink-umber">
+              <h2 className="text-2xl font-semibold text-ink-umber">
                 {game.title}
               </h2>
-              <p className="mt-2 max-w-[65ch] leading-relaxed text-ink-umber-soft">
+              <p className="mt-2.5 leading-relaxed text-ink-umber-soft">
                 {game.summary}
               </p>
-              <ol className="mt-5 max-w-[65ch] space-y-3">
+              <ol className="mt-6 space-y-4">
                 {game.instructions.map((step, stepIndex) => (
-                  <li key={stepIndex} className="flex gap-4 leading-relaxed">
-                    <span className="tabular-nums text-sm font-semibold text-sage-deep">
+                  <li key={stepIndex} className="flex gap-4 text-base leading-relaxed">
+                    <span className="tabular-nums text-base font-semibold text-sage-deep">
                       {String(stepIndex + 1).padStart(2, "0")}
                     </span>
                     <span className="text-ink-umber">{step}</span>

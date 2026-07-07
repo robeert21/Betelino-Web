@@ -14,9 +14,12 @@
   --color-amber-glow: #e0a73d;
   --color-amber-deep: #c48a24;
   --color-signal-red: #b65440;
+  --color-forest-night: #0e1c14;
+  --color-forest-mist: #2c4536;
 
   --font-display: var(--font-fraunces);
   --font-body: var(--font-inter);
+  --font-shout: var(--font-archivo-black);
 }
 
 @theme inline {
@@ -30,9 +33,16 @@
   --color-amber-glow: var(--color-amber-glow);
   --color-amber-deep: var(--color-amber-deep);
   --color-signal-red: var(--color-signal-red);
+  --color-forest-night: var(--color-forest-night);
+  --color-forest-mist: var(--color-forest-mist);
 
   --font-display: var(--font-display);
   --font-body: var(--font-body);
+  --font-shout: var(--font-shout);
+}
+
+html {
+  background: var(--color-forest-night);
 }
 
 body {

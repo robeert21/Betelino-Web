@@ -13,7 +13,14 @@ const STATUS_LABELS: Record<string, string> = {
 export function ShopRequestsTable({ requests }: { requests: ShopRequestEntry[] }) {
   return (
     <div className="overflow-x-auto rounded-[16px] bg-soft-linen">
-      <table className="w-full min-w-[680px] border-collapse text-sm">
+      <table className="w-full min-w-[860px] table-fixed border-collapse text-sm">
+        <colgroup>
+          <col className="w-[20%]" />
+          <col className="w-[30%]" />
+          <col className="w-[14%]" />
+          <col className="w-[14%]" />
+          <col className="w-[22%]" />
+        </colgroup>
         <thead>
           <tr className="border-b border-border-sand text-left text-ink-umber-soft">
             <th className="px-7 py-5 font-medium">Membru</th>
@@ -53,8 +60,8 @@ function ShopRequestRow({ request }: { request: ShopRequestEntry }) {
   return (
     <tr className="border-b border-border-sand last:border-0">
       <td className="px-7 py-5">
-        <p className="font-semibold text-ink-umber">{request.userName}</p>
-        <p className="text-xs text-ink-umber-soft">{request.userEmail}</p>
+        <p className="font-semibold text-ink-umber break-words">{request.userName}</p>
+        <p className="break-all text-xs text-ink-umber-soft">{request.userEmail}</p>
       </td>
       <td className="px-7 py-5 text-ink-umber">
         <ul className="flex flex-col gap-1">

@@ -14,8 +14,8 @@ export default function InregistrarePage() {
         Creează-ți contul
       </h1>
       <p className="mt-4 leading-relaxed text-ink-umber-soft">
-        Ai nevoie doar de nume, email și o parolă. Echipa ta va fi asignată de
-        instructori la începutul taberei.
+        Ai nevoie doar de nume, email și o parolă. Echipa ta va fi atribuită de
+        lideri la începutul taberei.
       </p>
 
       <RegisterForm />

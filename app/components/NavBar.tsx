@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const BASE_ROUTES = [
   { href: "/", label: "Acasă", icon: HomeIcon },
+  { href: "/clasament", label: "Clasament", icon: TrophyIcon },
   { href: "/regulamente", label: "Regulamente", icon: BookIcon },
   { href: "/magazin", label: "Magazin", icon: BagIcon },
   { href: "/cont", label: "Contul meu", icon: UserIcon },
@@ -18,10 +20,17 @@ export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 hidden md:block bg-warm-cream shadow-[0_1px_0_0_var(--color-border-sand)]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-10 py-5">
-          <Link href="/" className="font-display text-xl text-ink-umber">
-            Betelino
+      <header className="sticky top-0 z-40 hidden md:block bg-forest-night shadow-[0_1px_0_0_var(--color-forest-mist)]">
+        <div className="mx-auto flex max-w-[1800px] items-center justify-between px-10 py-3.5 xl:px-20 2xl:px-28">
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/camp-logo.png"
+              alt="Betelino — Vânătoarea de comori"
+              width={962}
+              height={557}
+              priority
+              className="h-14 w-auto"
+            />
           </Link>
           <nav className="flex items-center gap-8">
             {ROUTES.map((route) => {
@@ -35,13 +44,13 @@ export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
                   href={route.href}
                   className={`relative text-[0.8125rem] font-semibold uppercase tracking-[0.04em] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                     isActive
-                      ? "text-sage-deep"
-                      : "text-ink-umber-soft hover:text-ink-umber"
+                      ? "text-amber-glow"
+                      : "text-warm-cream/70 hover:text-warm-cream"
                   }`}
                 >
                   {route.label}
                   <span
-                    className={`absolute -bottom-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-sage-deep transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                    className={`absolute -bottom-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-amber-glow transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                       isActive
                         ? "scale-100 opacity-100"
                         : "scale-0 opacity-0"
@@ -52,6 +61,19 @@ export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
             })}
           </nav>
         </div>
+      </header>
+
+      <header className="sticky top-0 z-40 flex md:hidden items-center justify-center bg-forest-night px-6 py-3 shadow-[0_1px_0_0_var(--color-forest-mist)]">
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/camp-logo.png"
+            alt="Betelino — Vânătoarea de comori"
+            width={962}
+            height={557}
+            priority
+            className="h-9 w-auto"
+          />
+        </Link>
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 flex md:hidden border-t border-border-sand bg-warm-cream">
@@ -84,6 +106,19 @@ function HomeIcon({ active }: { active: boolean }) {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 11.5 12 4l9 7.5" />
       <path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9" />
+    </svg>
+  );
+}
+
+function TrophyIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 4h10v5a5 5 0 0 1-10 0Z" />
+      <path d="M7 5.5H4.5A1.5 1.5 0 0 0 3 7c0 2 1.5 3.5 3.5 3.5" />
+      <path d="M17 5.5h2.5A1.5 1.5 0 0 1 21 7c0 2-1.5 3.5-3.5 3.5" />
+      <path d="M12 14v3" />
+      <path d="M8.5 20.5h7" />
+      <path d="M9.5 17.5h5l.6 3h-6.2Z" />
     </svg>
   );
 }

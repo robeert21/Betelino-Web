@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Archivo_Black, Fraunces, Inter } from "next/font/google";
 import { NavBar } from "./components/NavBar";
 import { getCurrentUser, isLeaderRole } from "@/lib/auth";
 import "./globals.css";
@@ -13,6 +13,12 @@ const fraunces = Fraunces({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
+});
+
+const archivoBlack = Archivo_Black({
+  variable: "--font-archivo-black",
+  subsets: ["latin", "latin-ext"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -31,7 +37,7 @@ export default async function RootLayout({
   return (
     <html
       lang="ro"
-      className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${inter.variable} ${archivoBlack.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-warm-cream text-ink-umber">
         <NavBar isLeader={isLeader} />

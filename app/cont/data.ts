@@ -4,6 +4,7 @@ import { users, teams } from "@/db/schema";
 
 export type CamperAccount = {
   fullName: string;
+  username: string | null;
   teamName: string;
   individualPoints: number;
   teamPoints: number;
@@ -16,6 +17,7 @@ export async function getCamperAccount(
   const [row] = await db
     .select({
       name: users.name,
+      username: users.username,
       points: users.points,
       teamName: teams.name,
       teamPoints: teams.currentPoints,
@@ -29,7 +31,8 @@ export async function getCamperAccount(
 
   return {
     fullName: row.name,
-    teamName: row.teamName ?? "Neasignat încă",
+    username: row.username,
+    teamName: row.teamName ?? "Neatribuită încă",
     individualPoints: row.points,
     teamPoints: row.teamPoints ?? 0,
   };

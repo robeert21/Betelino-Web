@@ -20,7 +20,8 @@ export default async function LoginPage({
         Autentificare
       </h1>
       <p className="mt-4 leading-relaxed text-ink-umber-soft">
-        Intră în cont cu emailul și parola tale de la Betelino.
+        Intră în cont cu emailul sau numele de utilizator și parola ta de la
+        Betelino.
       </p>
 
       <LoginForm resetSucceeded={params.reset === "succes"} />

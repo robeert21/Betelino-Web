@@ -13,7 +13,11 @@ export const registerSchema = z
   });
 
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Adresă de email invalidă."),
+  identifier: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, "Introdu emailul sau numele de utilizator."),
   password: z.string().min(1, "Introdu parola."),
 });
 

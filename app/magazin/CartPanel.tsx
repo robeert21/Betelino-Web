@@ -32,7 +32,7 @@ export function CartPanel() {
       {sent ? (
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm font-semibold text-sage-deep">
-            Cererea a fost trimisă către instructori.
+            Cererea a fost trimisă către lideri.
           </p>
           <button
             type="button"
@@ -90,7 +90,7 @@ export function CartPanel() {
             type="button"
             disabled={isPending}
             onClick={handleSubmit}
-            className="mt-5 w-full rounded-full bg-amber-glow px-6 py-3 text-sm font-semibold text-ink-umber transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-amber-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-5 w-full rounded-full bg-amber-glow px-6 py-3.5 text-base font-semibold text-ink-umber transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-amber-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending ? "Se trimite…" : "Trimite cererea"}
           </button>

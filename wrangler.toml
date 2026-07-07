@@ -1,13 +1,19 @@
 name = "betelino-web"
+main = ".open-next/worker.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".open-next/cloudflare"
 
-[vars]
-OPENNEXT_TARGET = "cloudflare-pages"
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "betelino-web"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "betelino-db"
 database_id = "12909816-6996-4911-bfaf-793f1f9ce01f"
 migrations_dir = "drizzle/migrations"
+remote = true

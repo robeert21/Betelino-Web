@@ -10,6 +10,7 @@ import {
   hashPassword,
   verifyPassword,
 } from "@/lib/auth";
+import { generateUniqueUsername } from "@/lib/username";
 import {
   loginSchema,
   registerSchema,
@@ -61,10 +62,11 @@ export async function registerAction(
     return { error: "Există deja un cont cu acest email." };
   }
 
+  const username = await generateUniqueUsername(db, name);
   const passwordHash = await hashPassword(password);
   const [user] = await db
     .insert(users)
-    .values({ name, email, passwordHash })
+    .values({ name, email, username, passwordHash })
     .returning({ id: users.id });
 
   await createSession(user.id);
@@ -76,7 +78,7 @@ export async function loginAction(
   formData: FormData,
 ): Promise<ActionState> {
   const parsed = loginSchema.safeParse({
-    email: formData.get("email"),
+    identifier: formData.get("identifier"),
     password: formData.get("password"),
   });
 
@@ -84,20 +86,21 @@ export async function loginAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { email, password } = parsed.data;
+  const { identifier, password } = parsed.data;
   const db = await getDb();
+  const lookupColumn = identifier.includes("@") ? users.email : users.username;
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.email, email))
+    .where(eq(lookupColumn, identifier))
     .limit(1);
   if (!user) {
-    return { error: "Email sau parolă greșită." };
+    return { error: "Date de autentificare incorecte." };
   }
 
   const validPassword = await verifyPassword(password, user.passwordHash);
   if (!validPassword) {
-    return { error: "Email sau parolă greșită." };
+    return { error: "Date de autentificare incorecte." };
   }
 
   await createSession(user.id);

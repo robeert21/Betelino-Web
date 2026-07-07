@@ -7,19 +7,36 @@ export const metadata = {
 
 export default function RegulamentePage() {
   return (
-    <div className="mx-auto max-w-3xl px-6 py-16 md:px-10 md:py-24">
-      <p className="animate-fade-in text-[0.8125rem] font-semibold uppercase tracking-[0.04em] text-sage-deep">
-        Regulamente
-      </p>
-      <h1 className="animate-fade-in stagger-1 font-display mt-4 text-[clamp(1.5rem,3vw,2.25rem)] font-medium leading-[1.15] text-ink-umber">
-        Regulile jocurilor
-      </h1>
-      <p className="animate-fade-in stagger-2 mt-4 max-w-[65ch] leading-relaxed text-ink-umber-soft">
-        Alege o categorie de mai jos ca să vezi regulile jocurilor din tabără.
-        Instructorii pot adăuga precizări suplimentare înainte de fiecare joc.
-      </p>
+    <div>
+      <section className="relative overflow-hidden bg-forest-night">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 78% 30%, rgba(72, 145, 96, 0.55), transparent 60%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-[1800px] px-6 py-16 md:px-12 md:py-20 xl:px-20 2xl:px-28">
+          <div className="animate-fade-in flex items-center gap-2.5">
+            <span className="h-[2px] w-7 bg-amber-glow" />
+            <span className="text-[0.8125rem] font-bold uppercase tracking-[0.15em] text-amber-glow">
+              Regulamente
+            </span>
+          </div>
+          <h1 className="animate-fade-in stagger-1 font-shout mt-5 text-[clamp(2.25rem,5vw,4rem)] leading-[0.95] text-warm-cream">
+            REGULILE JOCURILOR
+          </h1>
+          <p className="animate-fade-in stagger-2 mt-6 max-w-[65ch] text-lg leading-relaxed text-warm-cream/80">
+            Alege o categorie de mai jos ca să vezi regulile jocurilor din
+            tabără. Liderii pot adăuga precizări suplimentare înainte de
+            fiecare joc.
+          </p>
+        </div>
+      </section>
 
-      <GameTabs categories={GAME_CATEGORIES} />
+      <div className="mx-auto max-w-[1800px] px-6 py-14 md:px-12 md:py-20 xl:px-20 2xl:px-28">
+        <GameTabs categories={GAME_CATEGORIES} />
+      </div>
     </div>
   );
 }

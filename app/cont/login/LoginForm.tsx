@@ -25,11 +25,11 @@ export function LoginForm({ resetSucceeded }: { resetSucceeded: boolean }) {
       )}
 
       <FormField
-        label="Email"
-        name="email"
-        type="email"
-        autoComplete="email"
-        error={state.fieldErrors?.email?.[0]}
+        label="Email sau utilizator"
+        name="identifier"
+        type="text"
+        autoComplete="username"
+        error={state.fieldErrors?.identifier?.[0]}
         required
       />
       <FormField

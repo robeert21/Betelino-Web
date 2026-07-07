@@ -101,7 +101,7 @@ function MemberRow({
           onChange={(event) => handleTeamChange(event.target.value)}
           className="rounded-[8px] border border-border-sand bg-warm-cream px-3.5 py-2.5 text-sm text-ink-umber disabled:opacity-60"
         >
-          <option value="">Neasignat</option>
+          <option value="">Neatribuit</option>
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
               {team.name}
