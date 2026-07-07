@@ -32,9 +32,6 @@ export async function submitShopCart(
     if (!item) {
       return { success: false, error: "Un obiect din coș nu a fost găsit." };
     }
-    if (line.quantity > item.availableStock) {
-      return { success: false, error: `Stoc insuficient pentru ${item.title}.` };
-    }
   }
 
   const db = await getDb();

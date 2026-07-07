@@ -33,10 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (quantity <= 0) return;
     setLinesById((current) => {
       const existingQuantity = current[item.id]?.quantity ?? 0;
-      const nextQuantity = Math.min(
-        existingQuantity + quantity,
-        item.availableStock,
-      );
+      const nextQuantity = existingQuantity + quantity;
       return { ...current, [item.id]: { item, quantity: nextQuantity } };
     });
   }, []);
@@ -58,8 +55,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         delete next[itemId];
         return next;
       }
-      const clamped = Math.min(quantity, existing.item.availableStock);
-      return { ...current, [itemId]: { ...existing, quantity: clamped } };
+      return { ...current, [itemId]: { ...existing, quantity } };
     });
   }, []);
 

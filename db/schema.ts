@@ -29,7 +29,6 @@ export const shopItems = sqliteTable("shop_items", {
   name: text("name").notNull(),
   description: text("description"),
   cost: integer("cost").notNull().default(0),
-  stock: integer("stock").notNull().default(0),
   imageUrl: text("image_url"),
   category: text("category").notNull().default("gustari"),
 });

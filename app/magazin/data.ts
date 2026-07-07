@@ -12,7 +12,6 @@ export const SHOP_CATEGORY_LABELS: Record<ShopCategory, string> = {
 export type ShopItem = {
   id: string;
   title: string;
-  availableStock: number;
   category: ShopCategory;
 };
 
@@ -27,7 +26,6 @@ export async function getShopItems(): Promise<ShopItem[]> {
   return rows.map((row) => ({
     id: row.id,
     title: row.name,
-    availableStock: row.stock,
     category: isShopCategory(row.category) ? row.category : "gustari",
   }));
 }

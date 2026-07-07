@@ -66,7 +66,6 @@ export function CartPanel() {
                     </span>
                     <button
                       type="button"
-                      disabled={line.quantity >= line.item.availableStock}
                       onClick={() => setQuantity(line.item.id, line.quantity + 1)}
                       className="px-2.5 py-1.5 text-sm font-semibold text-ink-umber disabled:opacity-40"
                     >
