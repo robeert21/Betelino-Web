@@ -46,8 +46,7 @@ html {
 }
 
 body {
-  background: var(--color-warm-cream);
-  color: var(--color-ink-umber);
+  background: var(--color-forest-night);
   font-family: var(--font-body);
 }
 

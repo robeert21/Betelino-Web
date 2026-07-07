@@ -40,9 +40,11 @@ export default async function RootLayout({
       lang="ro"
       className={`${fraunces.variable} ${inter.variable} ${archivoBlack.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-warm-cream text-ink-umber">
+      <body className="flex min-h-full flex-col bg-forest-night">
         <NavBar isLeader={isLeader} />
-        <main className="flex-1 pb-20 md:pb-0">{children}</main>
+        <main className="flex-1 bg-warm-cream pb-20 text-ink-umber md:pb-0">
+          {children}
+        </main>
       </body>
     </html>
   );
