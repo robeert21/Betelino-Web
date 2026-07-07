@@ -1,41 +1,55 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
 
-# testing
-/coverage
+# Next.js Build and Cache
+.next/
+out/
+build/
 
-# next.js
-/.next/
-/out/
+# Cloudflare & OpenNext Local Environments / Cache
+.wrangler/
+.open-next/
+.turbo/
+wrangler.toml.bak
 
-# production
-/build
+# Local Environment Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
 
-# misc
-.DS_Store
-*.pem
+# Drizzle & DB Temporary / Local Files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
 
-# debug
+# Automated Testing Screenshots (Optional: ignore if you don't want history on GitHub)
+# Dacă vrei ca pozele făcute de Puppeteer să rămână doar la tine pe calculator, lasă linia de mai jos:
+/Screenshots/*.png
+/screenshots/*.png
+
+# Testing Cache
+coverage/
+.nyc_output
+
+# Debug logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# System Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini

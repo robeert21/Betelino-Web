@@ -1,0 +1,1 @@
+ALTER TABLE `shop_items` ADD `category` text DEFAULT 'gustari' NOT NULL;
