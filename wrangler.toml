@@ -1,9 +1,10 @@
 name = "betelino-web"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-
-# Schimbă această linie din .open-next în:
 pages_build_output_dir = ".open-next/cloudflare"
+
+[vars]
+OPENNEXT_TARGET = "cloudflare-pages"
 
 [[d1_databases]]
 binding = "DB"
