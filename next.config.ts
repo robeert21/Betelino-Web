@@ -1,15 +1,11 @@
-import type { NextConfig } from "next";
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+import { configCloudflare } from '@opennextjs/cloudflare';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Adaugă această linie aici pentru OpenNext în producție:
-  output: 'standalone',
-  
-  turbopack: {
-    root: __dirname,
-  },
+  // Setările tale actuale dacă ai (ex: images, rute etc.)
 };
 
-initOpenNextCloudflareForDev();
-
-export default nextConfig;// force redeploy
+// Îi pasăm un obiect de configurare în care definim target-ul ca fiind cloudflare-pages
+export default configCloudflare(nextConfig, {
+  target: 'cloudflare-pages'
+});
