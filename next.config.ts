@@ -12,4 +12,4 @@ const nextConfig: NextConfig = {
 
 initOpenNextCloudflareForDev();
 
-export default nextConfig;
+export default nextConfig;// force redeploy
