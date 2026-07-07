@@ -9,4 +9,4 @@ pages_build_output_dir = ".open-next"
 binding = "DB"
 database_name = "betelino-db"
 database_id = "12909816-6996-4911-bfaf-793f1f9ce01f"
-migrations_dir = "drizzle/migrations"
+migrations_dir = "drizzle/migrations"# force pipeline redeploy
