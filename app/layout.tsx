@@ -24,6 +24,7 @@ const archivoBlack = Archivo_Black({
 export const metadata: Metadata = {
   title: "Betelino — Tabăra de vară",
   description: "Aplicația taberei de vară Betelino: reguli, magazin și contul tău.",
+  themeColor: "#0e1c14",
 };
 
 export default async function RootLayout({
