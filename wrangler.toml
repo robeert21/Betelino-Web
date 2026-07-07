@@ -1,12 +1,12 @@
-#:schema node_modules/wrangler/config-schema.json
 name = "betelino"
 compatibility_date = "2024-09-23"
-compatibility_flags = [ "nodejs_compat" ]
+compatibility_flags = ["nodejs_compat"]
 
-# Adaugă neapărat această linie salvatoare pentru Pages:
+# Linia salvatoare pentru Cloudflare Pages (înlocuiește parametrul "main"):
 pages_build_output_dir = ".open-next"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "betelino-db"
-database_id = "D1_ID-UL_TAU_REAL"
+database_id = "12909816-6996-4911-bfaf-793f1f9ce01f"
+migrations_dir = "drizzle/migrations"
