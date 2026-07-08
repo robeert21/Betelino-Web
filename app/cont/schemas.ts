@@ -2,7 +2,8 @@ import { z } from "zod";
 
 export const registerSchema = z
   .object({
-    name: z.string().trim().min(2, "Introdu numele complet."),
+    firstName: z.string().trim().min(2, "Introdu prenumele."),
+    lastName: z.string().trim().min(2, "Introdu numele."),
     email: z.string().trim().toLowerCase().email("Adresă de email invalidă."),
     password: z.string().min(6, "Parola trebuie să aibă minimum 6 caractere."),
     confirmPassword: z.string(),

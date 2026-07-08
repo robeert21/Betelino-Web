@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, count } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { teams, users, shopRequests, pointLogs } from "@/db/schema";
@@ -160,5 +160,39 @@ export async function assignRoleAction(
   await db.update(users).set({ role }).where(eq(users.id, userId));
 
   revalidatePath("/dashboard");
+  return {};
+}
+
+export async function deleteMemberAction(userId: string): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isAdminRole(currentUser.role)) {
+    return { error: "Doar administratorii pot șterge conturi." };
+  }
+
+  if (userId === currentUser.id) {
+    return { error: "Nu îți poți șterge propriul cont." };
+  }
+
+  const db = await getDb();
+
+  const [member] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
+  if (!member) {
+    return { error: "Membrul nu a fost găsit." };
+  }
+
+  const [{ value: logCount }] = await db
+    .select({ value: count() })
+    .from(pointLogs)
+    .where(eq(pointLogs.createdById, userId));
+  if (logCount > 0) {
+    return {
+      error: "Acest cont a înregistrat puncte pentru echipe și nu poate fi șters (istoricul trebuie păstrat).",
+    };
+  }
+
+  await db.delete(users).where(eq(users.id, userId));
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/membri");
   return {};
 }

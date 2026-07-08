@@ -20,10 +20,17 @@ export function RegisterForm() {
       )}
 
       <FormField
-        label="Nume complet"
-        name="name"
-        autoComplete="name"
-        error={state.fieldErrors?.name?.[0]}
+        label="Nume"
+        name="lastName"
+        autoComplete="family-name"
+        error={state.fieldErrors?.lastName?.[0]}
+        required
+      />
+      <FormField
+        label="Prenume"
+        name="firstName"
+        autoComplete="given-name"
+        error={state.fieldErrors?.firstName?.[0]}
         required
       />
       <FormField

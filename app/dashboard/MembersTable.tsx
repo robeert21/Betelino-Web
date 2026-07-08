@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { assignTeamAction, assignRoleAction } from "./actions";
+import { assignTeamAction, assignRoleAction, deleteMemberAction } from "./actions";
 import type { MemberEntry, TeamWithPoints } from "./data";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -31,6 +31,7 @@ export function MembersTable({
             <th className="px-7 py-5 font-medium">Rol</th>
             <th className="px-7 py-5 font-medium">Puncte</th>
             <th className="px-7 py-5 font-medium">Echipă</th>
+            <th className="px-7 py-5 font-medium"></th>
           </tr>
         </thead>
         <tbody>
@@ -59,6 +60,8 @@ function MemberRow({
 }) {
   const [teamId, setTeamId] = useState(member.teamId ?? "");
   const [role, setRole] = useState(member.role);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleted, setDeleted] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function handleTeamChange(value: string) {
@@ -73,6 +76,25 @@ function MemberRow({
     startTransition(async () => {
       await assignRoleAction(member.id, value);
     });
+  }
+
+  function handleDelete() {
+    if (!confirm(`Ștergi definitiv contul lui ${member.name}? Această acțiune nu poate fi anulată.`)) {
+      return;
+    }
+    setDeleteError(null);
+    startTransition(async () => {
+      const result = await deleteMemberAction(member.id);
+      if (result.error) {
+        setDeleteError(result.error);
+      } else {
+        setDeleted(true);
+      }
+    });
+  }
+
+  if (deleted) {
+    return null;
   }
 
   return (
@@ -108,6 +130,21 @@ function MemberRow({
             </option>
           ))}
         </select>
+      </td>
+      <td className="px-7 py-5 text-right">
+        {!isSelf && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isPending}
+            className="rounded-[8px] border border-red-200 px-3.5 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+          >
+            Șterge
+          </button>
+        )}
+        {deleteError && (
+          <p className="mt-2 max-w-[220px] text-xs text-red-600">{deleteError}</p>
+        )}
       </td>
     </tr>
   );

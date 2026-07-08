@@ -42,7 +42,8 @@ export async function registerAction(
   formData: FormData,
 ): Promise<ActionState> {
   const parsed = registerSchema.safeParse({
-    name: formData.get("name"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
     email: formData.get("email"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
@@ -52,7 +53,8 @@ export async function registerAction(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { name, email, password } = parsed.data;
+  const { firstName, lastName, email, password } = parsed.data;
+  const name = `${firstName} ${lastName}`;
   const db = await getDb();
 
   const [existing] = await db
