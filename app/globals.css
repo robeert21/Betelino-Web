@@ -155,12 +155,12 @@ html {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-7px);
+    transform: translateY(-3px);
   }
 }
 
 .animate-float-y {
-  animation: float-y 3.4s ease-in-out infinite;
+  animation: float-y 6s ease-in-out infinite;
 }
 
 @keyframes value-pop {
