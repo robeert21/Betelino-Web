@@ -96,6 +96,25 @@ export async function updateShopRequestStatusAction(
   return {};
 }
 
+export async function syncLeaderboardAction(): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isAdminRole(currentUser.role)) {
+    return { error: "Doar administratorii pot actualiza clasamentul." };
+  }
+
+  const db = await getDb();
+  await db
+    .update(teams)
+    .set({
+      leaderboardPoints: sql`${teams.currentPoints}`,
+      leaderboardSyncedAt: new Date(),
+    });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/clasament");
+  return {};
+}
+
 export async function assignTeamAction(
   userId: string,
   teamId: string | null,

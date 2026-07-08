@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { addTeamPointsAction, type AddPointsState } from "./actions";
 import type { TeamWithPoints } from "./data";
 
@@ -12,12 +12,16 @@ export function AddPointsForm({ teams }: { teams: TeamWithPoints[] }) {
     initialState,
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const [submitId, setSubmitId] = useState(0);
 
   useEffect(() => {
     if (state.success) {
       formRef.current?.reset();
     }
-  }, [state.success]);
+    if (state !== initialState) {
+      setSubmitId((id) => id + 1);
+    }
+  }, [state]);
 
   return (
     <form
@@ -30,12 +34,18 @@ export function AddPointsForm({ teams }: { teams: TeamWithPoints[] }) {
       </h2>
 
       {state.error && (
-        <p className="rounded-[8px] bg-warm-cream px-4 py-3 text-sm text-signal-red">
+        <p
+          key={`error-${submitId}`}
+          className="animate-alert-in rounded-[8px] bg-warm-cream px-4 py-3 text-sm text-signal-red"
+        >
           {state.error}
         </p>
       )}
       {state.success && (
-        <p className="rounded-[8px] bg-warm-cream px-4 py-3 text-sm text-sage-deep">
+        <p
+          key={`success-${submitId}`}
+          className="animate-alert-in rounded-[8px] bg-warm-cream px-4 py-3 text-sm text-sage-deep"
+        >
           Puncte înregistrate.
         </p>
       )}
@@ -48,7 +58,7 @@ export function AddPointsForm({ teams }: { teams: TeamWithPoints[] }) {
           id="teamId"
           name="teamId"
           required
-          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber"
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
         >
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
@@ -68,7 +78,7 @@ export function AddPointsForm({ teams }: { teams: TeamWithPoints[] }) {
           type="number"
           step={1}
           required
-          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber"
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
         />
       </div>
 
@@ -82,7 +92,7 @@ export function AddPointsForm({ teams }: { teams: TeamWithPoints[] }) {
           type="text"
           maxLength={280}
           placeholder="ex. Câștigători ștafetă"
-          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber"
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
         />
       </div>
 

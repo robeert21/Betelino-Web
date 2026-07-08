@@ -24,11 +24,6 @@ export default async function ContPage() {
       ? [{ label: "Utilizator", value: account.username }]
       : []),
     { label: "Echipă", value: account.teamName },
-    {
-      label: "Puncte individuale",
-      value: account.individualPoints,
-      numeric: true,
-    },
     { label: "Puncte echipă", value: account.teamPoints, numeric: true },
   ];
 
@@ -57,19 +52,27 @@ export default async function ContPage() {
         Aici vezi echipa ta și punctele adunate până acum în tabără.
       </p>
 
-      <dl className="animate-fade-in stagger-2 mt-12 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-8">
-        {rows.map((row) => (
+      <dl className="mt-12 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-8">
+        {rows.map((row, index) => (
           <div
             key={row.label}
-            className="flex items-center justify-between gap-6 py-5"
+            className="animate-fade-in flex items-center justify-between gap-6 py-5"
+            style={{ animationDelay: `${0.12 + index * 0.06}s` }}
           >
             <dt className="text-sm font-medium text-ink-umber-soft">
               {row.label}
             </dt>
             <dd
               className={`text-lg font-semibold text-ink-umber ${
-                row.numeric ? "tabular-nums" : ""
+                row.numeric
+                  ? "animate-value-pop tabular-nums"
+                  : ""
               }`}
+              style={
+                row.numeric
+                  ? { animationDelay: `${0.12 + index * 0.06 + 0.15}s` }
+                  : undefined
+              }
             >
               {row.value}
             </dd>

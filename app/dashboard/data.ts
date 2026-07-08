@@ -37,6 +37,17 @@ export async function getTeamsWithPoints(): Promise<TeamWithPoints[]> {
   }));
 }
 
+export async function getLeaderboardLastSyncedAt(): Promise<Date | null> {
+  const db = await getDb();
+  const [row] = await db
+    .select({ syncedAt: teams.leaderboardSyncedAt })
+    .from(teams)
+    .orderBy(desc(teams.leaderboardSyncedAt))
+    .limit(1);
+
+  return row?.syncedAt ?? null;
+}
+
 export type MemberEntry = {
   id: string;
   name: string;

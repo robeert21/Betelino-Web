@@ -15,13 +15,13 @@ export async function getLeaderboardTeams(): Promise<LeaderboardTeam[]> {
     .select({
       id: teams.id,
       name: teams.name,
-      points: teams.currentPoints,
+      points: teams.leaderboardPoints,
       memberCount: sql<number>`count(${users.id})`,
     })
     .from(teams)
     .leftJoin(users, eq(users.teamId, teams.id))
     .groupBy(teams.id)
-    .orderBy(sql`${teams.currentPoints} desc`, teams.name);
+    .orderBy(sql`${teams.leaderboardPoints} desc`, teams.name);
 
   return rows.map((row) => ({
     id: row.id,

@@ -6,6 +6,11 @@ export const teams = sqliteTable("teams", {
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull().unique(),
   currentPoints: integer("current_points").notNull().default(0),
+  // Snapshot of currentPoints shown on the public leaderboard. Only updated
+  // when an admin explicitly syncs it, so leaders can freely adjust
+  // currentPoints during the day without changing the public ranking.
+  leaderboardPoints: integer("leaderboard_points").notNull().default(0),
+  leaderboardSyncedAt: integer("leaderboard_synced_at", { mode: "timestamp_ms" }),
 });
 
 export const users = sqliteTable("users", {

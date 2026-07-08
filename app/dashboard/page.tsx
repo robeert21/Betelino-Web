@@ -1,14 +1,24 @@
-import { getTeamsWithPoints, getRecentPointLogs } from "./data";
+import {
+  getTeamsWithPoints,
+  getRecentPointLogs,
+  getLeaderboardLastSyncedAt,
+} from "./data";
 import { AddPointsForm } from "./AddPointsForm";
+import { SyncLeaderboardSection } from "./SyncLeaderboardSection";
+import { getCurrentUser, isAdminRole } from "@/lib/auth";
 
 export const metadata = {
   title: "Puncte — Dashboard lideri — Betelino",
 };
 
 export default async function DashboardPointsPage() {
-  const [teams, logs] = await Promise.all([
+  const currentUser = await getCurrentUser();
+  const isAdmin = !!currentUser && isAdminRole(currentUser.role);
+
+  const [teams, logs, leaderboardLastSyncedAt] = await Promise.all([
     getTeamsWithPoints(),
     getRecentPointLogs(),
+    isAdmin ? getLeaderboardLastSyncedAt() : Promise.resolve(null),
   ]);
 
   return (
@@ -21,6 +31,12 @@ export default async function DashboardPointsPage() {
         înregistrată cu numele tău și motivul.
       </p>
 
+      {isAdmin && (
+        <div className="mt-10">
+          <SyncLeaderboardSection lastSyncedAt={leaderboardLastSyncedAt} />
+        </div>
+      )}
+
       <div className="mt-14">
         <AddPointsForm teams={teams} />
       </div>
@@ -29,11 +45,12 @@ export default async function DashboardPointsPage() {
         <h2 className="animate-fade-in font-display text-lg font-medium text-ink-umber">
           Punctaj pe echipe
         </h2>
-        <div className="animate-fade-in mt-6 grid gap-6 sm:grid-cols-2">
-          {teams.map((team) => (
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          {teams.map((team, index) => (
             <div
               key={team.id}
-              className="flex items-center justify-between gap-4 rounded-[16px] bg-soft-linen p-7"
+              className="animate-fade-in flex items-center justify-between gap-4 rounded-[16px] bg-soft-linen p-7"
+              style={{ animationDelay: `${index * 0.05}s` }}
             >
               <div>
                 <h3 className="text-lg font-semibold text-ink-umber">
@@ -43,7 +60,10 @@ export default async function DashboardPointsPage() {
                   {team.memberCount} membri
                 </p>
               </div>
-              <p className="tabular-nums text-2xl font-semibold text-ink-umber">
+              <p
+                key={team.totalPoints}
+                className="animate-value-pop tabular-nums text-2xl font-semibold text-ink-umber"
+              >
                 {team.totalPoints}
               </p>
             </div>
@@ -57,14 +77,15 @@ export default async function DashboardPointsPage() {
         </h2>
         <div className="mt-6 divide-y divide-border-sand rounded-[16px] bg-soft-linen px-7">
           {logs.length === 0 && (
-            <p className="py-7 text-sm text-ink-umber-soft">
+            <p className="animate-fade-in py-7 text-sm text-ink-umber-soft">
               Nicio modificare înregistrată încă.
             </p>
           )}
-          {logs.map((log) => (
+          {logs.map((log, index) => (
             <div
               key={log.id}
-              className="flex items-center justify-between gap-6 py-5"
+              className="animate-fade-in flex items-center justify-between gap-6 py-5"
+              style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
             >
               <div>
                 <p className="text-sm font-semibold text-ink-umber">

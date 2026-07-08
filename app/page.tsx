@@ -19,7 +19,7 @@ const DESTINATIONS = [
   {
     href: "/cont",
     title: "Contul meu",
-    description: "Vezi numele echipei tale, punctele individuale și punctele echipei.",
+    description: "Vezi numele echipei tale și punctele adunate de echipă.",
     accent: "bg-forest-night/10 text-forest-night",
     dot: "bg-transparent border-2 border-forest-night rounded-full",
   },
@@ -39,7 +39,7 @@ export default function Home() {
         <div className="relative mx-auto grid max-w-[1800px] items-center gap-12 px-6 py-16 md:min-h-[calc(100svh-72px)] md:grid-cols-[1.05fr_0.95fr] md:gap-16 md:px-12 xl:px-20 2xl:px-28">
           <div>
             <div className="animate-fade-in flex items-center gap-2.5">
-              <span className="h-[2px] w-7 bg-amber-glow" />
+              <span className="animate-grow-x h-[2px] w-7 bg-amber-glow" />
               <span className="text-[0.8125rem] font-bold uppercase tracking-[0.15em] text-amber-glow">
                 Tabăra de vară 2026
               </span>
@@ -72,7 +72,7 @@ export default function Home() {
           <div className="flex justify-center pt-5 md:justify-end">
             <div className="relative flex w-fit items-end">
               <div
-                className="absolute left-1/2 top-0 h-[340px] w-[340px] -translate-x-1/2 rounded-full md:h-[560px] md:w-[560px] xl:h-[620px] xl:w-[620px]"
+                className="animate-glow-breathe pointer-events-none absolute left-1/2 top-0 h-[340px] w-[340px] -translate-x-1/2 rounded-full md:h-[560px] md:w-[560px] xl:h-[620px] xl:w-[620px]"
                 style={{
                   background:
                     "radial-gradient(circle, rgba(224,167,61,0.24), transparent 70%)",
@@ -84,10 +84,10 @@ export default function Home() {
                 width={720}
                 height={720}
                 priority
-                className="relative w-full max-w-[400px] drop-shadow-[0_30px_40px_rgba(10,20,15,0.55)] md:max-w-[560px] xl:max-w-[620px]"
+                className="animate-hero-reveal stagger-2 relative w-full max-w-[400px] drop-shadow-[0_30px_40px_rgba(10,20,15,0.55)] md:max-w-[560px] xl:max-w-[620px]"
               />
-              <div className="absolute bottom-2 left-0 flex items-center gap-2.5 rounded-2xl bg-warm-cream px-4 py-3 shadow-[0_12px_30px_-8px_rgba(10,20,15,0.4)]">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-sage-trust">
+              <div className="animate-fade-in stagger-4 absolute bottom-2 left-0 flex items-center gap-2.5 rounded-2xl bg-warm-cream px-4 py-3 shadow-[0_12px_30px_-8px_rgba(10,20,15,0.4)]">
+                <div className="animate-float-y flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-sage-trust">
                   <span className="h-3.5 w-3.5 rounded-full border-[2.5px] border-warm-cream" />
                 </div>
                 <span className="whitespace-nowrap text-sm font-extrabold text-ink-umber">
@@ -105,10 +105,10 @@ export default function Home() {
             <Link
               key={item.href}
               href={item.href}
-              className={`animate-fade-in stagger-${index + 1} group flex flex-col gap-2 bg-warm-cream p-8 transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 md:p-10`}
+              className={`animate-fade-in stagger-${index + 1} group flex flex-col gap-2 bg-warm-cream p-8 transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 active:scale-[0.99] md:p-10`}
             >
               <span
-                className={`mb-2 flex h-11 w-11 items-center justify-center rounded-xl ${item.accent}`}
+                className={`mb-2 flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 ${item.accent}`}
               >
                 <span className={`block h-5 w-5 ${item.dot}`} />
               </span>
