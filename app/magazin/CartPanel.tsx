@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useCart } from "./CartContext";
 import { submitShopCart } from "./actions";
+import { MAX_QUANTITY_PER_ITEM } from "./constants";
 
 const PANEL_EXIT_DURATION = 220;
 const LINE_EXIT_DURATION = 180;
@@ -10,7 +11,8 @@ const FOCUS_RING =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep";
 
 export function CartPanel() {
-  const { lines, totalItems, setQuantity, removeFromCart, clearCart } = useCart();
+  const { lines, totalItems, setQuantity, removeFromCart, clearCart, getItemTotalQuantity } =
+    useCart();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -48,20 +50,24 @@ export function CartPanel() {
 
   if (!mounted) return null;
 
-  function handleRemove(itemId: string) {
-    setRemovingId(itemId);
+  function lineKey(itemId: string, flavor: string | null) {
+    return flavor ? `${itemId}::${flavor}` : itemId;
+  }
+
+  function handleRemove(itemId: string, flavor: string | null) {
+    setRemovingId(lineKey(itemId, flavor));
     if (lineExitTimeout.current) clearTimeout(lineExitTimeout.current);
     lineExitTimeout.current = setTimeout(() => {
-      removeFromCart(itemId);
+      removeFromCart(itemId, flavor);
       setRemovingId(null);
     }, LINE_EXIT_DURATION);
   }
 
-  function handleDecrement(itemId: string, quantity: number) {
+  function handleDecrement(itemId: string, quantity: number, flavor: string | null) {
     if (quantity <= 1) {
-      handleRemove(itemId);
+      handleRemove(itemId, flavor);
     } else {
-      setQuantity(itemId, quantity - 1);
+      setQuantity(itemId, quantity - 1, flavor);
     }
   }
 
@@ -69,7 +75,11 @@ export function CartPanel() {
     setError(null);
     startTransition(async () => {
       const result = await submitShopCart(
-        lines.map((line) => ({ itemId: line.item.id, quantity: line.quantity })),
+        lines.map((line) => ({
+          itemId: line.item.id,
+          quantity: line.quantity,
+          flavor: line.flavor,
+        })),
       );
       if (result.success) {
         clearCart();
@@ -107,52 +117,61 @@ export function CartPanel() {
             </h2>
 
             <div className="mt-4 flex flex-col gap-3">
-              {lines.map((line) => (
-                <div
-                  key={line.item.id}
-                  className={`flex items-center justify-between gap-4 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                    removingId === line.item.id
-                      ? "-translate-x-2 opacity-0"
-                      : "translate-x-0 opacity-100"
-                  }`}
-                >
-                  <p className="text-sm text-ink-umber">{line.item.title}</p>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center rounded-full border border-border-sand">
+              {lines.map((line) => {
+                const key = lineKey(line.item.id, line.flavor);
+                const label = line.flavor
+                  ? `${line.item.title} — ${line.flavor}`
+                  : line.item.title;
+                return (
+                  <div
+                    key={key}
+                    className={`flex items-center justify-between gap-4 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                      removingId === key ? "-translate-x-2 opacity-0" : "translate-x-0 opacity-100"
+                    }`}
+                  >
+                    <p className="text-sm text-ink-umber">
+                      {line.item.title}
+                      {line.flavor && (
+                        <span className="text-ink-umber-soft"> — {line.flavor}</span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center rounded-full border border-border-sand">
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleDecrement(line.item.id, line.quantity, line.flavor)}
+                          aria-label={`Scade cantitatea pentru ${label}`}
+                          className={`px-2.5 py-1.5 text-sm font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 disabled:opacity-40 ${FOCUS_RING}`}
+                        >
+                          −
+                        </button>
+                        <span className="min-w-[1.5rem] text-center text-sm tabular-nums text-ink-umber">
+                          {line.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isPending || getItemTotalQuantity(line.item.id) >= MAX_QUANTITY_PER_ITEM}
+                          onClick={() => setQuantity(line.item.id, line.quantity + 1, line.flavor)}
+                          aria-label={`Crește cantitatea pentru ${label}`}
+                          className={`px-2.5 py-1.5 text-sm font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 disabled:opacity-40 ${FOCUS_RING}`}
+                        >
+                          +
+                        </button>
+                      </div>
                       <button
                         type="button"
                         disabled={isPending}
-                        onClick={() => handleDecrement(line.item.id, line.quantity)}
-                        aria-label={`Scade cantitatea pentru ${line.item.title}`}
-                        className={`px-2.5 py-1.5 text-sm font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 disabled:opacity-40 ${FOCUS_RING}`}
+                        onClick={() => handleRemove(line.item.id, line.flavor)}
+                        aria-label={`Șterge ${label} din coș`}
+                        className={`text-xs font-semibold text-signal-red transition-opacity duration-150 hover:opacity-70 disabled:opacity-40 ${FOCUS_RING}`}
                       >
-                        −
-                      </button>
-                      <span className="min-w-[1.5rem] text-center text-sm tabular-nums text-ink-umber">
-                        {line.quantity}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => setQuantity(line.item.id, line.quantity + 1)}
-                        aria-label={`Crește cantitatea pentru ${line.item.title}`}
-                        className={`px-2.5 py-1.5 text-sm font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 disabled:opacity-40 ${FOCUS_RING}`}
-                      >
-                        +
+                        Șterge
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      disabled={isPending}
-                      onClick={() => handleRemove(line.item.id)}
-                      aria-label={`Șterge ${line.item.title} din coș`}
-                      className={`text-xs font-semibold text-signal-red transition-opacity duration-150 hover:opacity-70 disabled:opacity-40 ${FOCUS_RING}`}
-                    >
-                      Șterge
-                    </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {error && (

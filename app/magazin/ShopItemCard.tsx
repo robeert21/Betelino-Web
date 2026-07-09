@@ -3,17 +3,26 @@
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "./CartContext";
 import type { ShopItem } from "./data";
+import { MAX_QUANTITY_PER_ITEM } from "./constants";
 
 const CONFIRM_DURATION = 1100;
 const FOCUS_RING =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep";
 
 export function ShopItemCard({ item }: { item: ShopItem }) {
-  const { addToCart, getQuantity } = useCart();
+  const { addToCart, getQuantity, getItemTotalQuantity } = useCart();
+  const hasFlavors = !!item.flavors && item.flavors.length > 0;
+  const [selectedFlavor, setSelectedFlavor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
-  const inCart = getQuantity(item.id);
+  const inCartTotal = getItemTotalQuantity(item.id);
+  const room = Math.max(0, MAX_QUANTITY_PER_ITEM - inCartTotal);
+  const limitReached = room === 0;
   const confirmTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setQuantity((q) => Math.min(q, Math.max(1, room)));
+  }, [room]);
 
   useEffect(() => {
     return () => {
@@ -21,8 +30,11 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
     };
   }, []);
 
+  const canAdd = !limitReached && (!hasFlavors || selectedFlavor !== null);
+
   function handleAdd() {
-    addToCart(item, quantity);
+    if (!canAdd) return;
+    addToCart(item, quantity, selectedFlavor);
     setQuantity(1);
     setJustAdded(true);
     if (confirmTimeout.current) clearTimeout(confirmTimeout.current);
@@ -36,18 +48,51 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
 
         <div
           className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
-          style={{ gridTemplateRows: inCart > 0 ? "1fr" : "0fr" }}
+          style={{ gridTemplateRows: inCartTotal > 0 ? "1fr" : "0fr" }}
         >
           <div className="min-h-0 overflow-hidden">
             <p
               className="pt-2 text-sm font-semibold text-sage-deep transition-opacity duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
-              style={{ opacity: inCart > 0 ? 1 : 0 }}
+              style={{ opacity: inCartTotal > 0 ? 1 : 0 }}
             >
-              {inCart} în coș
+              {inCartTotal}/{MAX_QUANTITY_PER_ITEM} în coș
+              {limitReached && " · limită atinsă"}
             </p>
           </div>
         </div>
       </div>
+
+      {hasFlavors && (
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={`Aromă pentru ${item.title}`}>
+          {item.flavors!.map((flavor) => {
+            const active = selectedFlavor === flavor;
+            const flavorCount = getQuantity(item.id, flavor);
+            return (
+              <button
+                key={flavor}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setSelectedFlavor(flavor)}
+                className={`relative rounded-full border px-3.5 py-2 text-sm font-medium transition-[background-color,color,border-color,transform] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-95 ${FOCUS_RING} ${
+                  active
+                    ? "border-transparent bg-sage-deep text-warm-cream"
+                    : "border-border-sand bg-warm-cream text-ink-umber hover:border-sage-deep/50"
+                }`}
+              >
+                {flavor}
+                {flavorCount > 0 && (
+                  <span
+                    className={`ml-1.5 tabular-nums ${active ? "text-warm-cream/75" : "text-sage-deep"}`}
+                  >
+                    · {flavorCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="mt-auto flex items-center gap-3">
         <div className="flex items-center rounded-full border border-border-sand">
@@ -65,9 +110,10 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
           </span>
           <button
             type="button"
-            onClick={() => setQuantity((q) => q + 1)}
+            disabled={limitReached || quantity >= room}
+            onClick={() => setQuantity((q) => Math.min(room, q + 1))}
             aria-label={`Crește cantitatea pentru ${item.title}`}
-            className={`px-3.5 py-2.5 text-base font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 ${FOCUS_RING}`}
+            className={`px-3.5 py-2.5 text-base font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 disabled:opacity-40 ${FOCUS_RING}`}
           >
             +
           </button>
@@ -76,6 +122,7 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
         <button
           type="button"
           onClick={handleAdd}
+          disabled={!canAdd}
           aria-live="polite"
           className={`flex-1 rounded-full border px-5 py-3.5 text-base font-semibold transition-[background-color,color,border-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] disabled:cursor-not-allowed disabled:border-transparent disabled:bg-border-sand disabled:text-ink-umber-soft disabled:active:scale-100 ${FOCUS_RING} ${
             justAdded
@@ -83,7 +130,13 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
               : "border-transparent bg-amber-glow text-ink-umber hover:bg-amber-deep"
           }`}
         >
-          {justAdded ? "Adăugat ✓" : "Adaugă în coș"}
+          {justAdded
+            ? "Adăugat ✓"
+            : limitReached
+              ? "Limită atinsă (2)"
+              : hasFlavors && !selectedFlavor
+                ? "Alege o aromă"
+                : "Adaugă în coș"}
         </button>
       </div>
     </div>

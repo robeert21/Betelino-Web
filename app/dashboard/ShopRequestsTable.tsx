@@ -67,7 +67,10 @@ function ShopRequestRow({ request }: { request: ShopRequestEntry }) {
         <ul className="flex flex-col gap-1">
           {request.items.map((line) => (
             <li key={line.id}>
-              {line.itemTitle}{" "}
+              {line.itemTitle}
+              {line.itemFlavor && (
+                <span className="text-ink-umber-soft"> — {line.itemFlavor}</span>
+              )}{" "}
               <span className="tabular-nums text-ink-umber-soft">× {line.quantity}</span>
             </li>
           ))}

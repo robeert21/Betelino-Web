@@ -8,67 +8,109 @@ import {
   useState,
 } from "react";
 import type { ShopItem } from "./data";
+import { MAX_QUANTITY_PER_ITEM } from "./constants";
 
 type CartLine = {
   item: ShopItem;
+  flavor: string | null;
   quantity: number;
 };
+
+function lineKey(itemId: string, flavor: string | null): string {
+  return flavor ? `${itemId}::${flavor}` : itemId;
+}
+
+function itemTotalExcluding(
+  lines: Record<string, CartLine>,
+  itemId: string,
+  excludeKey: string,
+): number {
+  return Object.entries(lines).reduce(
+    (sum, [key, line]) => (key !== excludeKey && line.item.id === itemId ? sum + line.quantity : sum),
+    0,
+  );
+}
 
 type CartContextValue = {
   lines: CartLine[];
   totalItems: number;
-  getQuantity: (itemId: string) => number;
-  addToCart: (item: ShopItem, quantity: number) => void;
-  removeFromCart: (itemId: string) => void;
-  setQuantity: (itemId: string, quantity: number) => void;
+  getQuantity: (itemId: string, flavor?: string | null) => number;
+  getItemTotalQuantity: (itemId: string) => number;
+  addToCart: (item: ShopItem, quantity: number, flavor?: string | null) => void;
+  removeFromCart: (itemId: string, flavor?: string | null) => void;
+  setQuantity: (itemId: string, quantity: number, flavor?: string | null) => void;
   clearCart: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [linesById, setLinesById] = useState<Record<string, CartLine>>({});
+  const [linesByKey, setLinesByKey] = useState<Record<string, CartLine>>({});
 
-  const addToCart = useCallback((item: ShopItem, quantity: number) => {
-    if (quantity <= 0) return;
-    setLinesById((current) => {
-      const existingQuantity = current[item.id]?.quantity ?? 0;
-      const nextQuantity = existingQuantity + quantity;
-      return { ...current, [item.id]: { item, quantity: nextQuantity } };
-    });
-  }, []);
+  const addToCart = useCallback(
+    (item: ShopItem, quantity: number, flavor: string | null = null) => {
+      if (quantity <= 0) return;
+      const key = lineKey(item.id, flavor);
+      setLinesByKey((current) => {
+        const existingQuantity = current[key]?.quantity ?? 0;
+        const otherFlavorsTotal = itemTotalExcluding(current, item.id, key);
+        const room = Math.max(0, MAX_QUANTITY_PER_ITEM - otherFlavorsTotal - existingQuantity);
+        const nextQuantity = existingQuantity + Math.min(quantity, room);
+        if (nextQuantity === existingQuantity) return current;
+        return { ...current, [key]: { item, flavor, quantity: nextQuantity } };
+      });
+    },
+    [],
+  );
 
-  const removeFromCart = useCallback((itemId: string) => {
-    setLinesById((current) => {
+  const removeFromCart = useCallback((itemId: string, flavor: string | null = null) => {
+    const key = lineKey(itemId, flavor);
+    setLinesByKey((current) => {
       const next = { ...current };
-      delete next[itemId];
+      delete next[key];
       return next;
     });
   }, []);
 
-  const setQuantity = useCallback((itemId: string, quantity: number) => {
-    setLinesById((current) => {
-      const existing = current[itemId];
-      if (!existing) return current;
-      if (quantity <= 0) {
-        const next = { ...current };
-        delete next[itemId];
-        return next;
-      }
-      return { ...current, [itemId]: { ...existing, quantity } };
-    });
-  }, []);
+  const setQuantity = useCallback(
+    (itemId: string, quantity: number, flavor: string | null = null) => {
+      const key = lineKey(itemId, flavor);
+      setLinesByKey((current) => {
+        const existing = current[key];
+        if (!existing) return current;
+        if (quantity <= 0) {
+          const next = { ...current };
+          delete next[key];
+          return next;
+        }
+        const otherFlavorsTotal = itemTotalExcluding(current, itemId, key);
+        const cappedQuantity = Math.min(quantity, MAX_QUANTITY_PER_ITEM - otherFlavorsTotal);
+        if (cappedQuantity === existing.quantity) return current;
+        return { ...current, [key]: { ...existing, quantity: cappedQuantity } };
+      });
+    },
+    [],
+  );
 
-  const clearCart = useCallback(() => setLinesById({}), []);
+  const clearCart = useCallback(() => setLinesByKey({}), []);
 
-  const lines = useMemo(() => Object.values(linesById), [linesById]);
+  const lines = useMemo(() => Object.values(linesByKey), [linesByKey]);
   const totalItems = useMemo(
     () => lines.reduce((sum, line) => sum + line.quantity, 0),
     [lines],
   );
   const getQuantity = useCallback(
-    (itemId: string) => linesById[itemId]?.quantity ?? 0,
-    [linesById],
+    (itemId: string, flavor: string | null = null) =>
+      linesByKey[lineKey(itemId, flavor)]?.quantity ?? 0,
+    [linesByKey],
+  );
+
+  const getItemTotalQuantity = useCallback(
+    (itemId: string) =>
+      lines
+        .filter((line) => line.item.id === itemId)
+        .reduce((sum, line) => sum + line.quantity, 0),
+    [lines],
   );
 
   const value = useMemo(
@@ -76,12 +118,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       lines,
       totalItems,
       getQuantity,
+      getItemTotalQuantity,
       addToCart,
       removeFromCart,
       setQuantity,
       clearCart,
     }),
-    [lines, totalItems, getQuantity, addToCart, removeFromCart, setQuantity, clearCart],
+    [
+      lines,
+      totalItems,
+      getQuantity,
+      getItemTotalQuantity,
+      addToCart,
+      removeFromCart,
+      setQuantity,
+      clearCart,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

@@ -27,7 +27,9 @@ export const users = sqliteTable("users", {
 });
 
 // category is validated as one of SHOP_CATEGORIES (see app/magazin/data.ts)
-// in application code.
+// in application code. flavors is a JSON-encoded string[] of variant options
+// (e.g. flavors, scents) a camper must choose between before ordering; null
+// when the item has no variants.
 export const shopItems = sqliteTable("shop_items", {
   id: text("id")
     .primaryKey()
@@ -37,6 +39,7 @@ export const shopItems = sqliteTable("shop_items", {
   cost: integer("cost").notNull().default(0),
   imageUrl: text("image_url"),
   category: text("category").notNull().default("gustari"),
+  flavors: text("flavors"),
 });
 
 // Status is validated as "PENDING" | "APPROVED" | "REJECTED" in application code.
@@ -54,7 +57,8 @@ export const shopRequests = sqliteTable("shop_requests", {
 });
 
 // itemId/itemTitle are snapshotted at request time since the shop catalog
-// row can change (price, name) after the request was submitted.
+// row can change (price, name) after the request was submitted. itemFlavor
+// is the variant the camper picked (null if the item has no flavors).
 export const shopRequestItems = sqliteTable("shop_request_items", {
   id: text("id")
     .primaryKey()
@@ -64,6 +68,7 @@ export const shopRequestItems = sqliteTable("shop_request_items", {
     .references(() => shopRequests.id, { onDelete: "cascade" }),
   itemId: text("item_id").notNull(),
   itemTitle: text("item_title").notNull(),
+  itemFlavor: text("item_flavor"),
   quantity: integer("quantity").notNull(),
 });
 

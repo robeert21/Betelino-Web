@@ -74,6 +74,7 @@ export async function getAllMembers(): Promise<MemberEntry[]> {
 export type ShopRequestLine = {
   id: string;
   itemTitle: string;
+  itemFlavor: string | null;
   quantity: number;
 };
 
@@ -107,7 +108,12 @@ export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> 
   const itemsByRequestId = new Map<string, ShopRequestLine[]>();
   for (const item of items) {
     const list = itemsByRequestId.get(item.shopRequestId) ?? [];
-    list.push({ id: item.id, itemTitle: item.itemTitle, quantity: item.quantity });
+    list.push({
+      id: item.id,
+      itemTitle: item.itemTitle,
+      itemFlavor: item.itemFlavor,
+      quantity: item.quantity,
+    });
     itemsByRequestId.set(item.shopRequestId, list);
   }
 

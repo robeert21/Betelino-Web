@@ -7,7 +7,16 @@ export const metadata = {
   title: "Magazin — Betelino",
 };
 
-const CATEGORY_ORDER: ShopCategory[] = ["gustari", "bursa-bufet", "suveniruri"];
+const CATEGORY_ORDER: ShopCategory[] = [
+  "chipsuri-snacks",
+  "dulciuri-gumate",
+  "ciocolata-batoane",
+  "biscuiti-napolitane",
+  "porumb-dulce",
+  "bauturi",
+  "guma-menta",
+  "igiena",
+];
 
 export default async function MagazinPage() {
   const items = await getShopItems();
