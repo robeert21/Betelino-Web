@@ -15,14 +15,16 @@ export type CartLineInput = {
 
 export async function submitShopCart(
   cartLines: CartLineInput[],
+  note?: string,
 ): Promise<{ success: boolean; error?: string }> {
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, error: "Trebuie să fii autentificat." };
   }
 
+  const trimmedNote = note?.trim() || null;
   const validLines = cartLines.filter((line) => line.quantity > 0);
-  if (validLines.length === 0) {
+  if (validLines.length === 0 && !trimmedNote) {
     return { success: false, error: "Coșul este gol." };
   }
 
@@ -58,21 +60,23 @@ export async function submitShopCart(
   const db = await getDb();
   const [request] = await db
     .insert(shopRequests)
-    .values({ userId: user.id })
+    .values({ userId: user.id, note: trimmedNote })
     .returning({ id: shopRequests.id });
 
-  await db.insert(shopRequestItems).values(
-    validLines.map((line) => {
-      const item = itemsById.get(line.itemId)!;
-      return {
-        shopRequestId: request.id,
-        itemId: item.id,
-        itemTitle: item.title,
-        itemFlavor: line.flavor,
-        quantity: line.quantity,
-      };
-    }),
-  );
+  if (validLines.length > 0) {
+    await db.insert(shopRequestItems).values(
+      validLines.map((line) => {
+        const item = itemsById.get(line.itemId)!;
+        return {
+          shopRequestId: request.id,
+          itemId: item.id,
+          itemTitle: item.title,
+          itemFlavor: line.flavor,
+          quantity: line.quantity,
+        };
+      }),
+    );
+  }
 
   revalidatePath("/dashboard/solicitari");
   return { success: true };

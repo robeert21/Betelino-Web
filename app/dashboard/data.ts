@@ -83,6 +83,7 @@ export type ShopRequestEntry = {
   userName: string;
   userEmail: string;
   items: ShopRequestLine[];
+  note: string | null;
   status: string;
   createdAt: Date;
 };
@@ -93,6 +94,7 @@ export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> 
     .select({
       id: shopRequests.id,
       status: shopRequests.status,
+      note: shopRequests.note,
       createdAt: shopRequests.createdAt,
       userName: users.name,
       userEmail: users.email,
@@ -122,6 +124,7 @@ export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> 
     userName: request.userName,
     userEmail: request.userEmail,
     items: itemsByRequestId.get(request.id) ?? [],
+    note: request.note,
     status: request.status,
     createdAt: request.createdAt,
   }));

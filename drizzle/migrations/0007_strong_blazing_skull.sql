@@ -1,0 +1,1 @@
+ALTER TABLE `shop_requests` ADD `note` text;

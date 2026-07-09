@@ -75,6 +75,12 @@ function ShopRequestRow({ request }: { request: ShopRequestEntry }) {
             </li>
           ))}
         </ul>
+        {request.note && (
+          <p className="mt-2 whitespace-pre-wrap break-words rounded-[10px] bg-warm-cream px-3 py-2 text-xs text-ink-umber-soft">
+            <span className="font-semibold text-ink-umber">Produse speciale: </span>
+            {request.note}
+          </p>
+        )}
       </td>
       <td className="px-7 py-5 text-ink-umber-soft">
         {request.createdAt.toLocaleString("ro-RO", {

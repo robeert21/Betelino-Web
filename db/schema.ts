@@ -51,6 +51,9 @@ export const shopRequests = sqliteTable("shop_requests", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   status: text("status").notNull().default("PENDING"),
+  // Free-text note for requests that don't fit the catalog (other shop items,
+  // pharmacy, etc.), typed by the camper alongside their cart.
+  note: text("note"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),

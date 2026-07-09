@@ -34,6 +34,8 @@ function itemTotalExcluding(
 type CartContextValue = {
   lines: CartLine[];
   totalItems: number;
+  note: string;
+  setNote: (note: string) => void;
   getQuantity: (itemId: string, flavor?: string | null) => number;
   getItemTotalQuantity: (itemId: string) => number;
   addToCart: (item: ShopItem, quantity: number, flavor?: string | null) => void;
@@ -46,6 +48,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [linesByKey, setLinesByKey] = useState<Record<string, CartLine>>({});
+  const [note, setNote] = useState("");
 
   const addToCart = useCallback(
     (item: ShopItem, quantity: number, flavor: string | null = null) => {
@@ -92,7 +95,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const clearCart = useCallback(() => setLinesByKey({}), []);
+  const clearCart = useCallback(() => {
+    setLinesByKey({});
+    setNote("");
+  }, []);
 
   const lines = useMemo(() => Object.values(linesByKey), [linesByKey]);
   const totalItems = useMemo(
@@ -117,6 +123,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     () => ({
       lines,
       totalItems,
+      note,
+      setNote,
       getQuantity,
       getItemTotalQuantity,
       addToCart,
@@ -127,6 +135,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [
       lines,
       totalItems,
+      note,
       getQuantity,
       getItemTotalQuantity,
       addToCart,

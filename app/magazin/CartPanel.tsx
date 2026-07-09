@@ -11,8 +11,16 @@ const FOCUS_RING =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep";
 
 export function CartPanel() {
-  const { lines, totalItems, setQuantity, removeFromCart, clearCart, getItemTotalQuantity } =
-    useCart();
+  const {
+    lines,
+    totalItems,
+    note,
+    setNote,
+    setQuantity,
+    removeFromCart,
+    clearCart,
+    getItemTotalQuantity,
+  } = useCart();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -80,6 +88,7 @@ export function CartPanel() {
           quantity: line.quantity,
           flavor: line.flavor,
         })),
+        note,
       );
       if (result.success) {
         clearCart();
@@ -172,6 +181,27 @@ export function CartPanel() {
                   </div>
                 );
               })}
+            </div>
+
+            <div className="mt-5">
+              <label
+                htmlFor="cart-special-note"
+                className="text-sm font-medium text-ink-umber"
+              >
+                Produse speciale
+              </label>
+              <p className="mt-1 text-xs text-ink-umber-soft">
+                Ai nevoie de altceva din magazin sau de la farmacie? Scrie aici.
+              </p>
+              <textarea
+                id="cart-special-note"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                disabled={isPending}
+                rows={2}
+                placeholder="ex: paracetamol, plasturi, alt produs din magazin..."
+                className={`mt-2 w-full resize-none rounded-[12px] border border-border-sand bg-warm-cream px-4 py-3 text-sm text-ink-umber placeholder:text-ink-umber-soft/70 transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] disabled:opacity-60 ${FOCUS_RING}`}
+              />
             </div>
 
             {error && (
