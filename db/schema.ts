@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const teams = sqliteTable("teams", {
   id: text("id")
@@ -83,6 +83,10 @@ export const pointLogs = sqliteTable("point_logs", {
   teamId: text("team_id")
     .notNull()
     .references(() => teams.id, { onDelete: "cascade" }),
+  // Null when the leader awarded points to the whole team. Set when the
+  // leader picked a specific camper, in which case users.points is also
+  // incremented so the camper's individual contribution is tracked.
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
   amount: integer("amount").notNull(),
   reason: text("reason"),
   createdById: text("created_by_id")
@@ -107,3 +111,24 @@ export const passwordResetTokens = sqliteTable("password_reset_tokens", {
     .notNull()
     .$defaultFn(() => new Date()),
 });
+
+// One row per user per calendar day (dateKey, e.g. "2026-07-09"). selected
+// is the chosen option index, or null when the 15s timer ran out unanswered.
+// A new dateKey each day naturally resets the game — no cleanup needed.
+export const dailyQuestionAnswers = sqliteTable(
+  "daily_question_answers",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    dateKey: text("date_key").notNull(),
+    selected: integer("selected"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => [uniqueIndex("daily_question_answers_user_date_idx").on(table.userId, table.dateKey)],
+);

@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { teams, users } from "@/db/schema";
 
@@ -29,4 +29,31 @@ export async function getLeaderboardTeams(): Promise<LeaderboardTeam[]> {
     points: row.points,
     memberCount: Number(row.memberCount),
   }));
+}
+
+export type TopCamper = {
+  id: string;
+  name: string;
+  points: number;
+  teamName: string | null;
+};
+
+// Top individual contributors across all teams, ranked by their own
+// point total (regardless of which team they're on).
+export async function getTopCampers(limit = 3): Promise<TopCamper[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      points: users.points,
+      teamName: teams.name,
+    })
+    .from(users)
+    .leftJoin(teams, eq(users.teamId, teams.id))
+    .where(eq(users.role, "CAMPER"))
+    .orderBy(desc(users.points), users.name)
+    .limit(limit);
+
+  return rows;
 }

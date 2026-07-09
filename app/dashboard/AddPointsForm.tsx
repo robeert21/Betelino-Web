@@ -1,27 +1,41 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { addTeamPointsAction, type AddPointsState } from "./actions";
-import type { TeamWithPoints } from "./data";
+import type { CamperMember, TeamWithPoints } from "./data";
 
 const initialState: AddPointsState = {};
 
-export function AddPointsForm({ teams }: { teams: TeamWithPoints[] }) {
+export function AddPointsForm({
+  teams,
+  members,
+}: {
+  teams: TeamWithPoints[];
+  members: CamperMember[];
+}) {
   const [state, formAction, isPending] = useActionState(
     addTeamPointsAction,
     initialState,
   );
   const formRef = useRef<HTMLFormElement>(null);
   const [submitId, setSubmitId] = useState(0);
+  const [teamId, setTeamId] = useState(teams[0]?.id ?? "");
+  const [memberSelectKey, setMemberSelectKey] = useState(0);
 
   useEffect(() => {
     if (state.success) {
       formRef.current?.reset();
+      setMemberSelectKey((key) => key + 1);
     }
     if (state !== initialState) {
       setSubmitId((id) => id + 1);
     }
   }, [state]);
+
+  const teamMembers = useMemo(
+    () => members.filter((member) => member.teamId === teamId),
+    [members, teamId],
+  );
 
   return (
     <form
@@ -58,6 +72,11 @@ export function AddPointsForm({ teams }: { teams: TeamWithPoints[] }) {
           id="teamId"
           name="teamId"
           required
+          value={teamId}
+          onChange={(event) => {
+            setTeamId(event.target.value);
+            setMemberSelectKey((key) => key + 1);
+          }}
           className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
         >
           {teams.map((team) => (
@@ -66,6 +85,29 @@ export function AddPointsForm({ teams }: { teams: TeamWithPoints[] }) {
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="userId" className="text-sm font-medium text-ink-umber-soft">
+          Copil (opțional)
+        </label>
+        <select
+          key={memberSelectKey}
+          id="userId"
+          name="userId"
+          defaultValue=""
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
+        >
+          <option value="">Toată echipa</option>
+          {teamMembers.map((member) => (
+            <option key={member.id} value={member.id}>
+              {member.name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-ink-umber-soft">
+          Alege un copil pentru a-i atribui punctele lui individual (se adaugă și la echipă), sau lasă „Toată echipa” pentru puncte doar de echipă.
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">

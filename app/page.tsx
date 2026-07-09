@@ -1,5 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/auth";
+import { DailyBibleQuestion } from "./components/DailyBibleQuestion";
+import { DAILY_QUESTIONS, dayIndexFromDateKey } from "./daily-question-data";
+import { getUserAnswerForDate } from "./daily-question-db";
 
 const DESTINATIONS = [
   {
@@ -25,7 +29,24 @@ const DESTINATIONS = [
   },
 ];
 
-export default function Home() {
+function getDailyQuestion() {
+  const now = new Date();
+  const dateKey = now.toISOString().slice(0, 10);
+  const dayOfYear = dayIndexFromDateKey(dateKey);
+  const question = DAILY_QUESTIONS[dayOfYear % DAILY_QUESTIONS.length];
+  const dayLabel = now.toLocaleDateString("ro-RO", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return { question, dateKey, dayLabel };
+}
+
+export default async function Home() {
+  const { question, dateKey, dayLabel } = getDailyQuestion();
+  const user = await getCurrentUser();
+  const savedAnswer = user ? await getUserAnswerForDate(user.id, dateKey) : null;
+
   return (
     <div>
       <section className="relative overflow-hidden bg-forest-night">
@@ -126,6 +147,41 @@ export default function Home() {
               </span>
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden bg-forest-night px-6 py-16 md:px-12 xl:px-20 2xl:px-28">
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 15% 20%, rgba(224, 167, 61, 0.16), transparent 55%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-[880px]">
+          <div className="animate-fade-in flex items-center gap-2.5">
+            <span className="animate-grow-x h-[2px] w-7 bg-amber-glow" />
+            <span className="text-[0.8125rem] font-bold uppercase tracking-[0.15em] text-amber-glow">
+              Întrebarea zilei
+            </span>
+          </div>
+          <h2 className="animate-fade-in stagger-1 font-display mt-4 text-3xl font-semibold text-warm-cream md:text-4xl">
+            Cât de bine cunoști Biblia?
+          </h2>
+          <p className="animate-fade-in stagger-2 mt-3 max-w-lg text-base leading-relaxed text-warm-cream/70">
+            O întrebare nouă în fiecare zi. Alege răspunsul corect și revino
+            mâine pentru una nouă.
+          </p>
+
+          <div className="animate-fade-in stagger-3 mt-8">
+            <DailyBibleQuestion
+              question={question}
+              dateKey={dateKey}
+              dayLabel={dayLabel}
+              loggedIn={Boolean(user)}
+              initialResult={savedAnswer}
+            />
+          </div>
         </div>
       </section>
     </div>

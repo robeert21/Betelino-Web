@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { users, teams } from "@/db/schema";
+import { users, teams, pointLogs } from "@/db/schema";
 
 export type CamperAccount = {
   fullName: string;
@@ -36,4 +36,33 @@ export async function getCamperAccount(
     individualPoints: row.points,
     teamPoints: row.teamPoints ?? 0,
   };
+}
+
+export type IndividualPointLogEntry = {
+  id: string;
+  amount: number;
+  reason: string | null;
+  createdAt: Date;
+};
+
+// The camper's own history of individually-attributed point awards (points
+// a leader gave specifically to them, not to the whole team).
+export async function getCamperPointLogs(
+  userId: string,
+  limit = 20,
+): Promise<IndividualPointLogEntry[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      id: pointLogs.id,
+      amount: pointLogs.amount,
+      reason: pointLogs.reason,
+      createdAt: pointLogs.createdAt,
+    })
+    .from(pointLogs)
+    .where(eq(pointLogs.userId, userId))
+    .orderBy(desc(pointLogs.createdAt))
+    .limit(limit);
+
+  return rows;
 }

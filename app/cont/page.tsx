@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getCamperAccount } from "./data";
+import { getCamperAccount, getCamperPointLogs } from "./data";
 import { logoutAction } from "./actions";
 
 export const metadata = {
@@ -18,6 +18,8 @@ export default async function ContPage() {
     redirect("/cont/login");
   }
 
+  const pointLogs = await getCamperPointLogs(session.userId);
+
   const rows = [
     { label: "Nume complet", value: account.fullName },
     ...(account.username
@@ -25,6 +27,7 @@ export default async function ContPage() {
       : []),
     { label: "Echipă", value: account.teamName },
     { label: "Puncte echipă", value: account.teamPoints, numeric: true },
+    { label: "Puncte individuale", value: account.individualPoints, numeric: true },
   ];
 
   return (
@@ -79,6 +82,44 @@ export default async function ContPage() {
           </div>
         ))}
       </dl>
+
+      {pointLogs.length > 0 && (
+        <div className="mt-12">
+          <h2 className="animate-fade-in font-display text-lg font-medium text-ink-umber">
+            Istoric puncte individuale
+          </h2>
+          <div className="mt-6 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-8">
+            {pointLogs.map((log, index) => (
+              <div
+                key={log.id}
+                className="animate-fade-in flex items-center justify-between gap-6 py-5"
+                style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
+              >
+                <div>
+                  {log.reason && (
+                    <p className="text-sm font-semibold text-ink-umber">{log.reason}</p>
+                  )}
+                  <p className="text-xs text-ink-umber-soft">
+                    {log.createdAt.toLocaleString("ro-RO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <p
+                  className={`tabular-nums text-lg font-semibold ${
+                    log.amount < 0 ? "text-signal-red" : "text-sage-deep"
+                  }`}
+                >
+                  {log.amount > 0 ? `+${log.amount}` : log.amount}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { desc, eq, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { getDb } from "@/db";
 import {
   teams,
@@ -46,6 +47,54 @@ export async function getLeaderboardLastSyncedAt(): Promise<Date | null> {
     .limit(1);
 
   return row?.syncedAt ?? null;
+}
+
+export type CamperMember = {
+  id: string;
+  name: string;
+  points: number;
+  teamId: string | null;
+};
+
+// Campers only, for the "assign points to a specific child" select in
+// AddPointsForm — filtered client-side by the team currently selected.
+export async function getCamperMembers(): Promise<CamperMember[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({ id: users.id, name: users.name, points: users.points, teamId: users.teamId })
+    .from(users)
+    .where(eq(users.role, "CAMPER"))
+    .orderBy(users.name);
+
+  return rows;
+}
+
+export type TeamMemberBreakdown = {
+  id: string;
+  name: string;
+  members: { id: string; name: string; points: number }[];
+};
+
+// Per-team roster of campers ranked by their individual point contribution,
+// for the "Puncte individuale" section of the dashboard.
+export async function getTeamMemberBreakdown(): Promise<TeamMemberBreakdown[]> {
+  const db = await getDb();
+  const teamRows = await db.select({ id: teams.id, name: teams.name }).from(teams).orderBy(teams.name);
+  const memberRows = await getCamperMembers();
+
+  const byTeam = new Map<string, { id: string; name: string; points: number }[]>();
+  for (const member of memberRows) {
+    if (!member.teamId) continue;
+    const list = byTeam.get(member.teamId) ?? [];
+    list.push({ id: member.id, name: member.name, points: member.points });
+    byTeam.set(member.teamId, list);
+  }
+
+  return teamRows.map((team) => ({
+    id: team.id,
+    name: team.name,
+    members: (byTeam.get(team.id) ?? []).sort((a, b) => b.points - a.points),
+  }));
 }
 
 export type MemberEntry = {
@@ -133,6 +182,7 @@ export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> 
 export type PointLogEntry = {
   id: string;
   teamName: string;
+  memberName: string | null;
   amount: number;
   reason: string | null;
   createdByName: string;
@@ -141,7 +191,8 @@ export type PointLogEntry = {
 
 export async function getRecentPointLogs(limit = 30): Promise<PointLogEntry[]> {
   const db = await getDb();
-  const createdByUsers = users;
+  const createdByUsers = alias(users, "created_by_users");
+  const memberUsers = alias(users, "member_users");
 
   const rows = await db
     .select({
@@ -151,12 +202,14 @@ export async function getRecentPointLogs(limit = 30): Promise<PointLogEntry[]> {
       createdAt: pointLogs.createdAt,
       teamName: teams.name,
       createdByName: createdByUsers.name,
+      memberName: memberUsers.name,
     })
     .from(pointLogs)
     .innerJoin(teams, eq(pointLogs.teamId, teams.id))
     .innerJoin(createdByUsers, eq(pointLogs.createdById, createdByUsers.id))
+    .leftJoin(memberUsers, eq(pointLogs.userId, memberUsers.id))
     .orderBy(desc(pointLogs.createdAt))
     .limit(limit);
 
-  return rows;
+  return rows.map((row) => ({ ...row, memberName: row.memberName ?? null }));
 }

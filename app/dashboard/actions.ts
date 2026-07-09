@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, sql, count } from "drizzle-orm";
+import { eq, or, sql, count } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { teams, users, shopRequests, pointLogs } from "@/db/schema";
@@ -16,6 +16,11 @@ export type AddPointsState = {
 
 const addPointsSchema = z.object({
   teamId: z.string().min(1, "Selectează o echipă."),
+  userId: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value ? value : undefined)),
   amount: z.coerce
     .number()
     .int("Numărul de puncte trebuie să fie întreg.")
@@ -34,6 +39,7 @@ export async function addTeamPointsAction(
 
   const parsed = addPointsSchema.safeParse({
     teamId: formData.get("teamId"),
+    userId: formData.get("userId") || undefined,
     amount: formData.get("amount"),
     reason: formData.get("reason") || undefined,
   });
@@ -42,7 +48,7 @@ export async function addTeamPointsAction(
     return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
   }
 
-  const { teamId, amount, reason } = parsed.data;
+  const { teamId, userId, amount, reason } = parsed.data;
   const db = await getDb();
 
   const [team] = await db.select({ id: teams.id }).from(teams).where(eq(teams.id, teamId)).limit(1);
@@ -50,13 +56,39 @@ export async function addTeamPointsAction(
     return { error: "Echipa nu a fost găsită." };
   }
 
-  await db.batch([
-    db.insert(pointLogs).values({ teamId, amount, reason, createdById: user.id }),
-    db
-      .update(teams)
-      .set({ currentPoints: sql`${teams.currentPoints} + ${amount}` })
-      .where(eq(teams.id, teamId)),
-  ]);
+  if (userId) {
+    const [member] = await db
+      .select({ id: users.id, teamId: users.teamId })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!member) {
+      return { error: "Membrul nu a fost găsit." };
+    }
+    if (member.teamId !== teamId) {
+      return { error: "Membrul selectat nu face parte din această echipă." };
+    }
+
+    await db.batch([
+      db.insert(pointLogs).values({ teamId, userId, amount, reason, createdById: user.id }),
+      db
+        .update(teams)
+        .set({ currentPoints: sql`${teams.currentPoints} + ${amount}` })
+        .where(eq(teams.id, teamId)),
+      db
+        .update(users)
+        .set({ points: sql`${users.points} + ${amount}` })
+        .where(eq(users.id, userId)),
+    ]);
+  } else {
+    await db.batch([
+      db.insert(pointLogs).values({ teamId, amount, reason, createdById: user.id }),
+      db
+        .update(teams)
+        .set({ currentPoints: sql`${teams.currentPoints} + ${amount}` })
+        .where(eq(teams.id, teamId)),
+    ]);
+  }
 
   revalidatePath("/dashboard");
   return { success: true };
@@ -183,10 +215,10 @@ export async function deleteMemberAction(userId: string): Promise<{ error?: stri
   const [{ value: logCount }] = await db
     .select({ value: count() })
     .from(pointLogs)
-    .where(eq(pointLogs.createdById, userId));
+    .where(or(eq(pointLogs.createdById, userId), eq(pointLogs.userId, userId)));
   if (logCount > 0) {
     return {
-      error: "Acest cont a înregistrat puncte pentru echipe și nu poate fi șters (istoricul trebuie păstrat).",
+      error: "Acest cont a înregistrat sau a primit puncte și nu poate fi șters (istoricul trebuie păstrat).",
     };
   }
 

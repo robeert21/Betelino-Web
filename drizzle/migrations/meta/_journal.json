@@ -57,6 +57,20 @@
       "when": 1783613261697,
       "tag": "0007_strong_blazing_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1783615985171,
+      "tag": "0008_serious_ego",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1783627939834,
+      "tag": "0009_individual_point_logs",
+      "breakpoints": true
     }
   ]
 }
