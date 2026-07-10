@@ -1,11 +1,50 @@
 import { redirect } from "next/navigation";
+import { statSync } from "fs";
+import path from "path";
 import { getSession } from "@/lib/auth";
 import { getCamperAccount, getCamperPointLogs } from "./data";
 import { logoutAction } from "./actions";
 import { AddEmailForm } from "./AddEmailForm";
 
+function photoUrl(relativePath: string) {
+  try {
+    const mtime = statSync(
+      path.join(process.cwd(), "public", relativePath),
+    ).mtimeMs;
+    return `${relativePath}?v=${mtime}`;
+  } catch {
+    return relativePath;
+  }
+}
+
 export const metadata = {
   title: "Contul meu — Betelino",
+};
+
+const TEAM_GUIDES: Record<
+  string,
+  { name: string; phone: string; photo: string }
+> = {
+  Mystery: {
+    name: "Vatamanu Robert",
+    phone: "0743 494 508",
+    photo: "/calauze/mystery.jpg",
+  },
+  Adventure: {
+    name: "Stefan Alexandra",
+    phone: "0739 266 250",
+    photo: "/calauze/adventure.jpg",
+  },
+  Nature: {
+    name: "Iacob Naomi",
+    phone: "0757 117 916",
+    photo: "/calauze/nature.jpg",
+  },
+  Discovery: {
+    name: "Filip Dabija",
+    phone: "0761 182 186",
+    photo: "/calauze/discovery.jpg",
+  },
 };
 
 export default async function ContPage() {
@@ -20,6 +59,7 @@ export default async function ContPage() {
   }
 
   const pointLogs = await getCamperPointLogs(session.userId);
+  const guide = TEAM_GUIDES[account.teamName];
 
   const rows = [
     { label: "Nume complet", value: account.fullName },
@@ -84,6 +124,25 @@ export default async function ContPage() {
           </div>
         ))}
       </dl>
+
+      {guide && (
+        <div className="animate-fade-in stagger-2 mt-8 flex items-center justify-between gap-4 rounded-[14px] bg-soft-linen px-8 py-6">
+          <div>
+            <p className="text-[0.8125rem] font-semibold uppercase tracking-[0.04em] text-sage-deep">
+              Călăuza ta
+            </p>
+            <p className="mt-1 text-base font-semibold text-ink-umber">
+              {guide.name}
+            </p>
+            <p className="text-sm text-ink-umber-soft">{guide.phone}</p>
+          </div>
+          <div
+            className="h-20 w-20 shrink-0 rounded-full bg-cover bg-center bg-border-sand"
+            style={{ backgroundImage: `url(${photoUrl(guide.photo)})` }}
+            aria-hidden
+          />
+        </div>
+      )}
 
       {!account.email && (
         <div className="animate-fade-in stagger-2 mt-8 rounded-[14px] bg-soft-linen px-8 py-6">

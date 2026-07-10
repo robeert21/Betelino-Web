@@ -369,7 +369,7 @@ export function ClasamentTabs({
         <section className="bg-soft-linen px-6 py-14 md:px-12 md:py-20 xl:px-20">
           <div className="mx-auto max-w-[820px]">
             <p className="animate-fade-in text-center text-sm text-ink-umber-soft">
-              Topul se actualizează în fiecare seară.
+              Topul se actualizează live, după fiecare probă.
             </p>
           </div>
         </section>
