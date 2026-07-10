@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser, isLeaderRole, isAdminRole } from "@/lib/auth";
+import { getCurrentUser, isLeaderRole, isAdminRole, isCalauzaRole } from "@/lib/auth";
 import { DashboardNav } from "./DashboardNav";
 
 export default async function DashboardLayout({
@@ -23,7 +23,7 @@ export default async function DashboardLayout({
 
       <div className="mt-10 flex flex-col gap-10 md:flex-row md:items-start md:gap-20">
         <div className="md:w-44 md:shrink-0">
-          <DashboardNav isAdmin={isAdminRole(user.role)} />
+          <DashboardNav isAdmin={isAdminRole(user.role)} isCalauza={isCalauzaRole(user.role)} />
         </div>
         <div className="min-w-0 flex-1">{children}</div>
       </div>

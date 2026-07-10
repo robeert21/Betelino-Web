@@ -1,13 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, or, sql, count } from "drizzle-orm";
+import { and, eq, or, sql, count } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { teams, users, shopRequests, pointLogs } from "@/db/schema";
 import { getCurrentUser, isLeaderRole, isAdminRole } from "@/lib/auth";
 
-const ASSIGNABLE_ROLES = ["CAMPER", "STAFF", "ADMIN"] as const;
+const ASSIGNABLE_ROLES = ["CAMPER", "STAFF", "ADMIN", "CALAUZA"] as const;
+
+async function teamHasOtherCalauza(teamId: string, excludingUserId: string): Promise<boolean> {
+  const db = await getDb();
+  const [existing] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.teamId, teamId), eq(users.role, "CALAUZA")))
+    .limit(1);
+  return !!existing && existing.id !== excludingUserId;
+}
 
 export type AddPointsState = {
   error?: string;
@@ -163,6 +173,11 @@ export async function assignTeamAction(
     if (!team) {
       return { error: "Echipa nu a fost găsită." };
     }
+
+    const [member] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+    if (member?.role === "CALAUZA" && (await teamHasOtherCalauza(teamId, userId))) {
+      return { error: "Echipa are deja o călăuză." };
+    }
   }
 
   await db.update(users).set({ teamId }).where(eq(users.id, userId));
@@ -189,6 +204,14 @@ export async function assignRoleAction(
   }
 
   const db = await getDb();
+
+  if (role === "CALAUZA") {
+    const [member] = await db.select({ teamId: users.teamId }).from(users).where(eq(users.id, userId)).limit(1);
+    if (member?.teamId && (await teamHasOtherCalauza(member.teamId, userId))) {
+      return { error: "Echipa are deja o călăuză." };
+    }
+  }
+
   await db.update(users).set({ role }).where(eq(users.id, userId));
 
   revalidatePath("/dashboard");

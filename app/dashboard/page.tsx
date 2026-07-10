@@ -89,15 +89,23 @@ export default async function DashboardPointsPage() {
               className="animate-fade-in rounded-[16px] bg-soft-linen p-7"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <h3 className="text-lg font-semibold text-ink-umber">{team.name}</h3>
+              <div className="flex items-baseline justify-between gap-4">
+                <h3 className="text-lg font-semibold text-ink-umber">{team.name}</h3>
+                <span className="text-xs text-ink-umber-soft">{team.members.length} copii</span>
+              </div>
               {team.members.length === 0 ? (
                 <p className="mt-3 text-sm text-ink-umber-soft">Niciun copil în echipă încă.</p>
               ) : (
-                <ul className="mt-4 divide-y divide-border-sand">
-                  {team.members.map((member) => (
-                    <li key={member.id} className="flex items-center justify-between gap-4 py-2.5">
-                      <span className="text-sm text-ink-umber">{member.name}</span>
-                      <span className="tabular-nums text-sm font-semibold text-ink-umber">
+                <ul className="mt-4 max-h-[360px] divide-y divide-border-sand overflow-y-auto pr-1">
+                  {team.members.map((member, memberIndex) => (
+                    <li key={member.id} className="flex items-center justify-between gap-4 py-1.5">
+                      <span className="flex min-w-0 items-center gap-2.5">
+                        <span className="w-4 shrink-0 text-right text-xs tabular-nums text-ink-umber-soft/70">
+                          {memberIndex + 1}
+                        </span>
+                        <span className="truncate text-sm text-ink-umber">{member.name}</span>
+                      </span>
+                      <span className="shrink-0 tabular-nums text-sm font-semibold text-ink-umber">
                         {member.points}
                       </span>
                     </li>

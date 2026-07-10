@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { getDb } from "@/db";
 import {
@@ -95,6 +95,25 @@ export async function getTeamMemberBreakdown(): Promise<TeamMemberBreakdown[]> {
     name: team.name,
     members: (byTeam.get(team.id) ?? []).sort((a, b) => b.points - a.points),
   }));
+}
+
+export type TeamRosterEntry = {
+  id: string;
+  name: string;
+  points: number;
+};
+
+// All campers of a single team, ranked by points — for the "călăuză"
+// (one-per-team guide role) "Membrii echipei" dashboard section.
+export async function getTeamRoster(teamId: string): Promise<TeamRosterEntry[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({ id: users.id, name: users.name, points: users.points })
+    .from(users)
+    .where(and(eq(users.teamId, teamId), eq(users.role, "CAMPER")))
+    .orderBy(desc(users.points));
+
+  return rows;
 }
 
 export type MemberEntry = {

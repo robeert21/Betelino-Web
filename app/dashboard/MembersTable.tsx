@@ -7,6 +7,7 @@ import type { MemberEntry, TeamWithPoints } from "./data";
 const ROLE_LABELS: Record<string, string> = {
   CAMPER: "Camper",
   STAFF: "Lider",
+  CALAUZA: "Călăuză",
   ADMIN: "Admin",
 };
 
@@ -60,21 +61,35 @@ function MemberRow({
 }) {
   const [teamId, setTeamId] = useState(member.teamId ?? "");
   const [role, setRole] = useState(member.role);
+  const [teamError, setTeamError] = useState<string | null>(null);
+  const [roleError, setRoleError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleted, setDeleted] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function handleTeamChange(value: string) {
+    const previous = teamId;
     setTeamId(value);
+    setTeamError(null);
     startTransition(async () => {
-      await assignTeamAction(member.id, value || null);
+      const result = await assignTeamAction(member.id, value || null);
+      if (result.error) {
+        setTeamId(previous);
+        setTeamError(result.error);
+      }
     });
   }
 
   function handleRoleChange(value: string) {
+    const previous = role;
     setRole(value);
+    setRoleError(null);
     startTransition(async () => {
-      await assignRoleAction(member.id, value);
+      const result = await assignRoleAction(member.id, value);
+      if (result.error) {
+        setRole(previous);
+        setRoleError(result.error);
+      }
     });
   }
 
@@ -114,6 +129,7 @@ function MemberRow({
             </option>
           ))}
         </select>
+        {roleError && <p className="mt-2 max-w-[180px] text-xs text-red-600">{roleError}</p>}
       </td>
       <td className="px-7 py-5 tabular-nums text-ink-umber">{member.points}</td>
       <td className="px-7 py-5">
@@ -130,6 +146,7 @@ function MemberRow({
             </option>
           ))}
         </select>
+        {teamError && <p className="mt-2 max-w-[180px] text-xs text-red-600">{teamError}</p>}
       </td>
       <td className="px-7 py-5 text-right">
         {!isSelf && (

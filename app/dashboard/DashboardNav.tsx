@@ -3,12 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function DashboardNav({ isAdmin }: { isAdmin: boolean }) {
+export function DashboardNav({
+  isAdmin,
+  isCalauza,
+}: {
+  isAdmin: boolean;
+  isCalauza: boolean;
+}) {
   const pathname = usePathname();
 
   const items = [
     { href: "/dashboard", label: "Puncte" },
     { href: "/dashboard/solicitari", label: "Solicitări" },
+    ...(isCalauza || isAdmin ? [{ href: "/dashboard/echipa", label: "Membrii echipei" }] : []),
     ...(isAdmin ? [{ href: "/dashboard/membri", label: "Membri" }] : []),
   ];
 

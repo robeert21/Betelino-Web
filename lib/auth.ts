@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
 
-export const LEADER_ROLES = ["STAFF", "ADMIN"] as const;
+export const LEADER_ROLES = ["STAFF", "ADMIN", "CALAUZA"] as const;
 
 const SESSION_COOKIE = "betelino_session";
 const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -90,4 +90,8 @@ export function isLeaderRole(role: string): boolean {
 
 export function isAdminRole(role: string): boolean {
   return role === "ADMIN";
+}
+
+export function isCalauzaRole(role: string): boolean {
+  return role === "CALAUZA";
 }
