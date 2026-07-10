@@ -1,71 +1,103 @@
 "use client";
 
 import { useState } from "react";
-import type { GameCategory } from "./data";
+import type { GameRule, RuleSection } from "./data";
 
-export function GameTabs({ categories }: { categories: GameCategory[] }) {
-  const [activeSlug, setActiveSlug] = useState(categories[0].slug);
-  const active = categories.find((category) => category.slug === activeSlug) ?? categories[0];
+type TopSection = "regulament" | "jocuri";
+
+const TOP_SECTIONS: { slug: TopSection; label: string }[] = [
+  { slug: "regulament", label: "Regulamentul Taberei" },
+  { slug: "jocuri", label: "Jocuri" },
+];
+
+function RuleSections({ sections, wide = false }: { sections: RuleSection[]; wide?: boolean }) {
+  return (
+    <div className={`grid gap-6 ${wide ? "lg:grid-cols-2" : ""}`}>
+      {sections.map((section, index) => (
+        <section
+          key={section.title}
+          className="animate-fade-in rounded-[16px] bg-soft-linen p-7 md:p-8"
+          style={{ animationDelay: `${0.05 + Math.min(index, 4) * 0.08}s` }}
+        >
+          <h3 className="text-xl font-semibold text-ink-umber">{section.title}</h3>
+          {section.intro ? (
+            <p className="mt-2.5 leading-relaxed text-ink-umber-soft">{section.intro}</p>
+          ) : null}
+          <ul className="mt-5 space-y-3">
+            {section.items.map((item, itemIndex) => (
+              <li key={itemIndex} className="flex gap-3 text-base leading-relaxed">
+                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sage-deep" />
+                <span className="text-ink-umber">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function GameCard({ game }: { game: GameRule }) {
+  return (
+    <div className="animate-fade-in min-w-0">
+      <h2 className="text-2xl font-semibold text-ink-umber">{game.title}</h2>
+      <p className="mt-2.5 max-w-[75ch] text-lg leading-relaxed text-ink-umber-soft">
+        {game.summary}
+      </p>
+      <div className="mt-8">
+        <RuleSections sections={game.sections} wide />
+      </div>
+    </div>
+  );
+}
+
+export function GameTabs({
+  campRules,
+  games,
+}: {
+  campRules: RuleSection[];
+  games: GameRule[];
+}) {
+  const [activeTop, setActiveTop] = useState<TopSection>("regulament");
 
   return (
-    <div className="mt-10 grid gap-10 md:grid-cols-[260px_1fr] md:gap-14 lg:grid-cols-[300px_1fr] lg:gap-20">
+    <div>
       <div
         role="tablist"
-        aria-label="Categorii de jocuri"
-        className="flex flex-wrap gap-2.5 md:sticky md:top-24 md:flex-col md:items-start md:self-start md:gap-2"
+        aria-label="Secțiuni"
+        className="flex flex-wrap gap-2.5"
       >
-        {categories.map((category) => {
-          const isActive = category.slug === activeSlug;
+        {TOP_SECTIONS.map((section) => {
+          const isActive = section.slug === activeTop;
           return (
             <button
-              key={category.slug}
+              key={section.slug}
               type="button"
               role="tab"
               aria-selected={isActive}
-              onClick={() => setActiveSlug(category.slug)}
-              className={`min-h-[48px] rounded-full px-6 py-2.5 text-sm font-semibold uppercase tracking-[0.04em] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] md:w-full md:text-left ${
+              onClick={() => setActiveTop(section.slug)}
+              className={`min-h-[48px] rounded-full px-6 py-2.5 text-sm font-semibold uppercase tracking-[0.04em] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 isActive
                   ? "bg-forest-night text-warm-cream"
                   : "bg-soft-linen text-ink-umber-soft hover:text-ink-umber"
               }`}
             >
-              {category.label}
+              {section.label}
             </button>
           );
         })}
       </div>
 
-      <div key={active.slug} className="animate-fade-in min-w-0">
-        <p className="max-w-[75ch] text-lg leading-relaxed text-ink-umber-soft">
-          {active.description}
-        </p>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          {active.games.map((game, index) => (
-            <section
-              key={game.slug}
-              className="animate-fade-in rounded-[16px] bg-soft-linen p-7 md:p-8"
-              style={{ animationDelay: `${0.05 + Math.min(index, 4) * 0.08}s` }}
-            >
-              <h2 className="text-2xl font-semibold text-ink-umber">
-                {game.title}
-              </h2>
-              <p className="mt-2.5 leading-relaxed text-ink-umber-soft">
-                {game.summary}
-              </p>
-              <ol className="mt-6 space-y-4">
-                {game.instructions.map((step, stepIndex) => (
-                  <li key={stepIndex} className="flex gap-4 text-base leading-relaxed">
-                    <span className="tabular-nums text-base font-semibold text-sage-deep">
-                      {String(stepIndex + 1).padStart(2, "0")}
-                    </span>
-                    <span className="text-ink-umber">{step}</span>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ))}
-        </div>
+      <div key={activeTop} className="animate-fade-in mt-10">
+        {activeTop === "regulament" ? (
+          <RuleSections sections={campRules} />
+        ) : (
+          <div className="grid gap-14">
+            {games.map((game) => (
+              <GameCard key={game.slug} game={game} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { GAME_CATEGORIES } from "./data";
+import { CAMP_RULES, GAMES } from "./data";
 import { GameTabs } from "./GameTabs";
 
 export const metadata = {
@@ -27,15 +27,15 @@ export default function RegulamentePage() {
             REGULILE JOCURILOR
           </h1>
           <p className="animate-fade-in stagger-2 mt-6 max-w-[65ch] text-lg leading-relaxed text-warm-cream/80">
-            Alege o categorie de mai jos ca să vezi regulile jocurilor din
-            tabără. Liderii pot adăuga precizări suplimentare înainte de
-            fiecare joc.
+            Alege o secțiune de mai jos: regulamentul general al taberei sau
+            regulile jocurilor. Liderii pot adăuga precizări suplimentare
+            înainte de fiecare activitate.
           </p>
         </div>
       </section>
 
       <div className="mx-auto max-w-[1800px] px-6 py-14 md:px-12 md:py-20 xl:px-20 2xl:px-28">
-        <GameTabs categories={GAME_CATEGORIES} />
+        <GameTabs campRules={CAMP_RULES} games={GAMES} />
       </div>
     </div>
   );
