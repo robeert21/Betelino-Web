@@ -218,6 +218,28 @@ export async function assignRoleAction(
   return {};
 }
 
+const CABIN_COUNT = 14;
+
+export async function assignCabinAction(
+  userId: string,
+  cabin: number | null,
+): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isAdminRole(currentUser.role)) {
+    return { error: "Doar administratorii pot asigna cabane." };
+  }
+
+  if (cabin !== null && (!Number.isInteger(cabin) || cabin < 1 || cabin > CABIN_COUNT)) {
+    return { error: "Cabană invalidă." };
+  }
+
+  const db = await getDb();
+  await db.update(users).set({ cabin }).where(eq(users.id, userId));
+
+  revalidatePath("/dashboard");
+  return {};
+}
+
 export async function deleteMemberAction(userId: string): Promise<{ error?: string }> {
   const currentUser = await getCurrentUser();
   if (!currentUser || !isAdminRole(currentUser.role)) {

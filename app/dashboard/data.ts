@@ -123,6 +123,7 @@ export type MemberEntry = {
   role: string;
   points: number;
   teamId: string | null;
+  cabin: number | null;
 };
 
 export async function getAllMembers(): Promise<MemberEntry[]> {
@@ -136,6 +137,7 @@ export async function getAllMembers(): Promise<MemberEntry[]> {
     role: user.role,
     points: user.points,
     teamId: user.teamId,
+    cabin: user.cabin,
   }));
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { assignTeamAction, assignRoleAction, deleteMemberAction } from "./actions";
+import { assignTeamAction, assignRoleAction, assignCabinAction, deleteMemberAction } from "./actions";
 import type { MemberEntry, TeamWithPoints } from "./data";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -12,6 +12,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const ROLE_OPTIONS = Object.entries(ROLE_LABELS);
+const CABIN_OPTIONS = Array.from({ length: 14 }, (_, i) => i + 1);
 
 export function MembersTable({
   members,
@@ -32,6 +33,7 @@ export function MembersTable({
             <th className="px-7 py-5 font-medium">Rol</th>
             <th className="px-7 py-5 font-medium">Puncte</th>
             <th className="px-7 py-5 font-medium">Echipă</th>
+            <th className="px-7 py-5 font-medium">Cabană</th>
             <th className="px-7 py-5 font-medium"></th>
           </tr>
         </thead>
@@ -61,8 +63,10 @@ function MemberRow({
 }) {
   const [teamId, setTeamId] = useState(member.teamId ?? "");
   const [role, setRole] = useState(member.role);
+  const [cabin, setCabin] = useState(member.cabin != null ? String(member.cabin) : "");
   const [teamError, setTeamError] = useState<string | null>(null);
   const [roleError, setRoleError] = useState<string | null>(null);
+  const [cabinError, setCabinError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleted, setDeleted] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -89,6 +93,19 @@ function MemberRow({
       if (result.error) {
         setRole(previous);
         setRoleError(result.error);
+      }
+    });
+  }
+
+  function handleCabinChange(value: string) {
+    const previous = cabin;
+    setCabin(value);
+    setCabinError(null);
+    startTransition(async () => {
+      const result = await assignCabinAction(member.id, value ? Number(value) : null);
+      if (result.error) {
+        setCabin(previous);
+        setCabinError(result.error);
       }
     });
   }
@@ -147,6 +164,22 @@ function MemberRow({
           ))}
         </select>
         {teamError && <p className="mt-2 max-w-[180px] text-xs text-red-600">{teamError}</p>}
+      </td>
+      <td className="px-7 py-5">
+        <select
+          value={cabin}
+          disabled={isPending}
+          onChange={(event) => handleCabinChange(event.target.value)}
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-3.5 py-2.5 text-sm text-ink-umber disabled:opacity-60"
+        >
+          <option value="">Neatribuită</option>
+          {CABIN_OPTIONS.map((number) => (
+            <option key={number} value={number}>
+              {number}
+            </option>
+          ))}
+        </select>
+        {cabinError && <p className="mt-2 max-w-[180px] text-xs text-red-600">{cabinError}</p>}
       </td>
       <td className="px-7 py-5 text-right">
         {!isSelf && (

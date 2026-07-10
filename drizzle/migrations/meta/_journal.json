@@ -78,6 +78,13 @@
       "when": 1783661808588,
       "tag": "0010_first_terrax",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1783663440704,
+      "tag": "0011_opposite_argent",
+      "breakpoints": true
     }
   ]
 }

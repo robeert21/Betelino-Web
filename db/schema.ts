@@ -24,6 +24,7 @@ export const users = sqliteTable("users", {
   role: text("role").notNull().default("CAMPER"),
   points: integer("points").notNull().default(0),
   teamId: text("team_id").references(() => teams.id),
+  cabin: integer("cabin"),
 });
 
 // category is validated as one of SHOP_CATEGORIES (see app/magazin/data.ts)
