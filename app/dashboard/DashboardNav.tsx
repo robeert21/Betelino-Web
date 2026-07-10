@@ -20,7 +20,7 @@ export function DashboardNav({
   ];
 
   return (
-    <nav className="flex gap-2 md:flex-col md:gap-2">
+    <nav className="flex flex-wrap gap-2 md:flex-col md:flex-nowrap md:gap-2">
       {items.map((item) => {
         const isActive = pathname === item.href;
         return (
