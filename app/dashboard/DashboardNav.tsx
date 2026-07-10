@@ -27,7 +27,7 @@ export function DashboardNav({
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] md:rounded-[10px] md:px-4 md:py-3 ${
+            className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep md:rounded-[10px] md:px-4 md:py-3 ${
               isActive
                 ? "bg-soft-linen text-sage-deep"
                 : "text-ink-umber-soft hover:bg-soft-linen hover:text-ink-umber"

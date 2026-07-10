@@ -77,7 +77,7 @@ export function AddPointsForm({
             setTeamId(event.target.value);
             setMemberSelectKey((key) => key + 1);
           }}
-          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out hover:border-sage-trust/50 focus:border-sage-trust focus:outline-none"
         >
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
@@ -96,7 +96,7 @@ export function AddPointsForm({
           id="userId"
           name="userId"
           defaultValue=""
-          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out hover:border-sage-trust/50 focus:border-sage-trust focus:outline-none"
         >
           <option value="">Toată echipa</option>
           {teamMembers.map((member) => (
@@ -120,7 +120,7 @@ export function AddPointsForm({
           type="number"
           step={1}
           required
-          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out hover:border-sage-trust/50 focus:border-sage-trust focus:outline-none"
         />
       </div>
 
@@ -134,14 +134,14 @@ export function AddPointsForm({
           type="text"
           maxLength={280}
           placeholder="ex. Câștigători ștafetă"
-          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
+          className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out hover:border-sage-trust/50 focus:border-sage-trust focus:outline-none"
         />
       </div>
 
       <button
         type="submit"
         disabled={isPending}
-        className="mt-2 rounded-full bg-amber-glow px-6 py-3 text-sm font-semibold text-ink-umber transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-amber-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-border-sand disabled:text-ink-umber-soft"
+        className="mt-2 rounded-full bg-amber-glow px-6 py-3 text-sm font-semibold text-ink-umber transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-amber-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-border-sand disabled:text-ink-umber-soft"
       >
         {isPending ? "Se salvează…" : "Salvează"}
       </button>

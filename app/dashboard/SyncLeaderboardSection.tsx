@@ -70,7 +70,7 @@ export function SyncLeaderboardSection({
           type="button"
           onClick={handleSync}
           disabled={isPending}
-          className="rounded-full bg-sage-deep px-6 py-3 text-sm font-semibold text-warm-cream transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-ink-umber active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-border-sand disabled:text-ink-umber-soft"
+          className="rounded-full bg-sage-deep px-6 py-3 text-sm font-semibold text-warm-cream transition-[background-color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-ink-umber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-border-sand disabled:text-ink-umber-soft"
         >
           {isPending ? "Se actualizează…" : "Trimite punctele în clasament"}
         </button>

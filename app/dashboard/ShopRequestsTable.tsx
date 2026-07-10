@@ -92,7 +92,7 @@ function ShopRequestRow({ request }: { request: ShopRequestEntry }) {
       </td>
       <td className="px-7 py-5">
         <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+          className={`rounded-full bg-warm-cream px-3 py-1 text-xs font-semibold ${
             status === "APPROVED"
               ? "text-sage-deep"
               : status === "REJECTED"
@@ -111,7 +111,7 @@ function ShopRequestRow({ request }: { request: ShopRequestEntry }) {
               type="button"
               disabled={isPending}
               onClick={() => handleUpdate("APPROVED")}
-              className="rounded-full bg-amber-glow px-4 py-2 text-xs font-semibold text-ink-umber transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-amber-deep disabled:opacity-60"
+              className="rounded-full bg-amber-glow px-4 py-2 text-xs font-semibold text-ink-umber transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-amber-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep disabled:opacity-60"
             >
               Aprobă
             </button>
@@ -119,7 +119,7 @@ function ShopRequestRow({ request }: { request: ShopRequestEntry }) {
               type="button"
               disabled={isPending}
               onClick={() => handleUpdate("REJECTED")}
-              className="rounded-full bg-border-sand px-4 py-2 text-xs font-semibold text-ink-umber transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-warm-cream disabled:opacity-60"
+              className="rounded-full bg-border-sand px-4 py-2 text-xs font-semibold text-ink-umber transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-warm-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep disabled:opacity-60"
             >
               Respinge
             </button>
