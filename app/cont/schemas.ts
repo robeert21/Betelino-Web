@@ -26,6 +26,10 @@ export const requestResetSchema = z.object({
   email: z.string().trim().toLowerCase().email("Adresă de email invalidă."),
 });
 
+export const addEmailSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Adresă de email invalidă."),
+});
+
 export const resetPasswordSchema = z
   .object({
     token: z.string().min(1),

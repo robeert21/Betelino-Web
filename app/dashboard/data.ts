@@ -119,7 +119,7 @@ export async function getTeamRoster(teamId: string): Promise<TeamRosterEntry[]> 
 export type MemberEntry = {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   role: string;
   points: number;
   teamId: string | null;
@@ -149,7 +149,7 @@ export type ShopRequestLine = {
 export type ShopRequestEntry = {
   id: string;
   userName: string;
-  userEmail: string;
+  userEmail: string | null;
   items: ShopRequestLine[];
   note: string | null;
   status: string;

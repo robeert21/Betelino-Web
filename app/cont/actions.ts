@@ -8,12 +8,14 @@ import { users, passwordResetTokens } from "@/db/schema";
 import {
   createSession,
   destroySession,
+  getSession,
   hashPassword,
   verifyPassword,
 } from "@/lib/auth";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { generateUniqueUsername } from "@/lib/username";
 import {
+  addEmailSchema,
   loginSchema,
   registerSchema,
   requestResetSchema,
@@ -75,6 +77,49 @@ export async function registerAction(
 
   await createSession(user.id);
   redirect("/cont");
+}
+
+export async function addEmailAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const session = await getSession();
+  if (!session) {
+    redirect("/cont/login");
+  }
+
+  const parsed = addEmailSchema.safeParse({
+    email: formData.get("email"),
+  });
+
+  if (!parsed.success) {
+    return { fieldErrors: parsed.error.flatten().fieldErrors };
+  }
+
+  const { email } = parsed.data;
+  const db = await getDb();
+
+  const [currentUser] = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.id, session.userId))
+    .limit(1);
+  if (currentUser?.email) {
+    return { error: "Contul are deja un email asociat." };
+  }
+
+  const [existing] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+  if (existing) {
+    return { error: "Există deja un cont cu acest email." };
+  }
+
+  await db.update(users).set({ email }).where(eq(users.id, session.userId));
+
+  return { message: "Emailul a fost adăugat cu succes." };
 }
 
 export async function loginAction(
@@ -158,12 +203,21 @@ export async function requestPasswordResetAction(
   const protocol = host?.startsWith("localhost") ? "http" : "https";
   const resetUrl = `${protocol}://${host}${resetPath}`;
 
-  const { sent } = await sendPasswordResetEmail(email, resetUrl);
+  let configured = false;
+  try {
+    ({ configured } = await sendPasswordResetEmail(email, resetUrl));
+  } catch (error) {
+    // A configured provider failing to deliver (e.g. sender domain not
+    // verified for this recipient) must not crash the page, but the reset
+    // link must also never be shown on-screen here — anyone could type in
+    // another person's email and hijack their account. Just log it.
+    console.error("Trimiterea emailului de resetare a eșuat:", error);
+  }
 
-  // If no email provider is configured (e.g. local dev without
-  // RESEND_API_KEY), surface the reset link directly so the flow stays
-  // testable without a real inbox.
-  const devResetLink = sent ? undefined : resetPath;
+  // Only surface the reset link directly on the page when no email
+  // provider is configured at all (e.g. local dev without RESEND_API_KEY),
+  // so the flow stays testable without a real inbox.
+  const devResetLink = configured ? undefined : resetPath;
 
   return { message: genericMessage, devResetLink };
 }

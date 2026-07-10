@@ -10,11 +10,11 @@ function getResendClient(): Resend | null {
 export async function sendPasswordResetEmail(
   to: string,
   resetUrl: string,
-): Promise<{ sent: boolean }> {
+): Promise<{ sent: boolean; configured: boolean }> {
   const resend = getResendClient();
   if (!resend) {
     // No provider configured (e.g. local dev without RESEND_API_KEY set).
-    return { sent: false };
+    return { sent: false, configured: false };
   }
 
   const from = process.env.RESEND_FROM_EMAIL ?? "Betelino <onboarding@resend.com>";
@@ -41,5 +41,5 @@ export async function sendPasswordResetEmail(
     throw new Error(`Trimiterea emailului de resetare a eșuat: ${error.message}`);
   }
 
-  return { sent: true };
+  return { sent: true, configured: true };
 }

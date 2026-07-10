@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getCamperAccount, getCamperPointLogs } from "./data";
 import { logoutAction } from "./actions";
+import { AddEmailForm } from "./AddEmailForm";
 
 export const metadata = {
   title: "Contul meu — Betelino",
@@ -25,6 +26,7 @@ export default async function ContPage() {
     ...(account.username
       ? [{ label: "Utilizator", value: account.username }]
       : []),
+    ...(account.email ? [{ label: "Email", value: account.email }] : []),
     { label: "Echipă", value: account.teamName },
     { label: "Puncte echipă", value: account.teamPoints, numeric: true },
     { label: "Puncte individuale", value: account.individualPoints, numeric: true },
@@ -82,6 +84,20 @@ export default async function ContPage() {
           </div>
         ))}
       </dl>
+
+      {!account.email && (
+        <div className="animate-fade-in stagger-2 mt-8 rounded-[14px] bg-soft-linen px-8 py-6">
+          <h2 className="font-display text-lg font-medium text-ink-umber">
+            Contul tău nu are un email
+          </h2>
+          <p className="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-umber-soft">
+            Adaugă o adresă de email ca să poți reseta parola dacă o uiți.
+          </p>
+          <div className="mt-5">
+            <AddEmailForm />
+          </div>
+        </div>
+      )}
 
       {pointLogs.length > 0 && (
         <div className="mt-12">

@@ -71,6 +71,13 @@
       "when": 1783627939834,
       "tag": "0009_individual_point_logs",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1783661808588,
+      "tag": "0010_first_terrax",
+      "breakpoints": true
     }
   ]
 }
