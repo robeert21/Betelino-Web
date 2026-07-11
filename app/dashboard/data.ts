@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { getDb } from "@/db";
 import {
@@ -28,7 +28,7 @@ export async function getTeamsWithPoints(): Promise<TeamWithPoints[]> {
       memberCount: sql<number>`count(${users.id})`,
     })
     .from(teams)
-    .leftJoin(users, eq(users.teamId, teams.id))
+    .leftJoin(users, and(eq(users.teamId, teams.id), ne(users.role, "CALAUZA")))
     .groupBy(teams.id)
     .orderBy(teams.name);
 

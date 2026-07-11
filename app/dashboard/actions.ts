@@ -35,7 +35,7 @@ const addPointsSchema = z.object({
     .number()
     .int("Numărul de puncte trebuie să fie întreg.")
     .refine((value) => value !== 0, "Introdu o valoare diferită de zero."),
-  reason: z.string().trim().max(280).optional(),
+  reason: z.string().trim().min(1, "Motivul este obligatoriu.").max(280),
 });
 
 export async function addTeamPointsAction(

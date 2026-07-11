@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { teams, users } from "@/db/schema";
 
@@ -19,7 +19,7 @@ export async function getLeaderboardTeams(): Promise<LeaderboardTeam[]> {
       memberCount: sql<number>`count(${users.id})`,
     })
     .from(teams)
-    .leftJoin(users, eq(users.teamId, teams.id))
+    .leftJoin(users, and(eq(users.teamId, teams.id), ne(users.role, "CALAUZA")))
     .groupBy(teams.id)
     .orderBy(sql`${teams.leaderboardPoints} desc`, teams.name);
 

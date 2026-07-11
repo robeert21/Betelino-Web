@@ -126,13 +126,14 @@ export function AddPointsForm({
 
       <div className="flex flex-col gap-2">
         <label htmlFor="reason" className="text-sm font-medium text-ink-umber-soft">
-          Motiv (opțional)
+          Motiv
         </label>
         <input
           id="reason"
           name="reason"
           type="text"
           maxLength={280}
+          required
           placeholder="ex. Câștigători ștafetă"
           className="rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out hover:border-sage-trust/50 focus:border-sage-trust focus:outline-none"
         />
