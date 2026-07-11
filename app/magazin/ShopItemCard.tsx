@@ -8,6 +8,12 @@ const CONFIRM_DURATION = 1100;
 const FOCUS_RING =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep";
 
+function formatPrice(bani: number): string {
+  const lei = bani / 100;
+  const formatted = Number.isInteger(lei) ? lei.toString() : lei.toFixed(2).replace(/0$/, "");
+  return `${formatted.replace(".", ",")} lei`;
+}
+
 export function ShopItemCard({ item }: { item: ShopItem }) {
   const { addToCart, getQuantity, getItemTotalQuantity } = useCart();
   const hasFlavors = !!item.flavors && item.flavors.length > 0;
@@ -45,7 +51,12 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
   return (
     <div className="flex h-full flex-col gap-4 rounded-[16px] bg-soft-linen p-7 transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5">
       <div className="flex flex-col">
-        <h2 className="text-xl font-semibold text-ink-umber">{item.title}</h2>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-xl font-semibold text-ink-umber">{item.title}</h2>
+          <span className="shrink-0 text-sm font-semibold text-sage-deep">
+            {formatPrice(item.cost)}
+          </span>
+        </div>
 
         {dailyLimitReached && inCartTotal === 0 && (
           <p className="pt-2 text-sm font-semibold text-signal-red">

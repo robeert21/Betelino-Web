@@ -14,6 +14,8 @@ export type ShopItem = {
   title: string;
   category: ShopCategory;
   flavors: string[] | null;
+  // Price in bani (1 leu = 100 bani), for display only.
+  cost: number;
   dailyLimit: number | null;
   // How many of this item the camper can still order today, given
   // dailyLimit and what they already ordered (any non-rejected request
@@ -75,6 +77,7 @@ export async function getShopItems(userId?: string): Promise<ShopItem[]> {
       title: row.name,
       category: isShopCategory(row.category) ? row.category : "chipsuri-snacks",
       flavors: parseFlavors(row.flavors),
+      cost: row.cost,
       dailyLimit,
       remainingToday: dailyLimit == null ? null : Math.max(0, dailyLimit - orderedToday),
     };
