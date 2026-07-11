@@ -1,5 +1,5 @@
-import { getShopItems, SHOP_CATEGORY_LABELS, SHOP_CATEGORY_ORDER } from "./data";
-import { ShopItemCard } from "./ShopItemCard";
+import { getShopItems } from "./data";
+import { ShopBrowser } from "./ShopBrowser";
 import { CartProvider } from "./CartContext";
 import { CartPanel } from "./CartPanel";
 import { getCurrentUser } from "@/lib/auth";
@@ -42,41 +42,7 @@ export default async function MagazinPage() {
         </section>
 
         <div className="mx-auto max-w-[1800px] px-6 py-14 md:px-12 md:py-20 xl:px-20 2xl:px-28">
-          <div className="mx-auto max-w-5xl divide-y divide-border-sand">
-            {SHOP_CATEGORY_ORDER.map((category, sectionIndex) => {
-              const categoryItems = items.filter((item) => item.category === category);
-              if (categoryItems.length === 0) return null;
-
-              return (
-                <section
-                  key={category}
-                  className="animate-fade-in py-10 first:pt-0"
-                  style={{ animationDelay: `${0.1 + sectionIndex * 0.08}s` }}
-                >
-                  <div className="flex items-baseline gap-4">
-                    <span className="tabular-nums text-sm font-semibold text-sage-deep">
-                      {String(sectionIndex + 1).padStart(2, "0")}
-                    </span>
-                    <h2 className="font-display text-xl font-medium text-ink-umber">
-                      {SHOP_CATEGORY_LABELS[category]}
-                    </h2>
-                  </div>
-
-                  <div className="mt-7 grid gap-7 sm:grid-cols-2">
-                    {categoryItems.map((item, index) => (
-                      <div
-                        key={item.id}
-                        className="animate-fade-in"
-                        style={{ animationDelay: `${0.16 + Math.min(index, 5) * 0.06}s` }}
-                      >
-                        <ShopItemCard item={item} />
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
-          </div>
+          <ShopBrowser items={items} />
 
           <div className="mx-auto max-w-5xl">
             <CartPanel />

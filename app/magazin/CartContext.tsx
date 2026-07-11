@@ -42,6 +42,7 @@ function itemTotalExcluding(
 type CartContextValue = {
   lines: CartLine[];
   totalItems: number;
+  totalCost: number;
   note: string;
   setNote: (note: string) => void;
   getQuantity: (itemId: string, flavor?: string | null) => number;
@@ -113,6 +114,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     () => lines.reduce((sum, line) => sum + line.quantity, 0),
     [lines],
   );
+  const totalCost = useMemo(
+    () => lines.reduce((sum, line) => sum + line.item.cost * line.quantity, 0),
+    [lines],
+  );
   const getQuantity = useCallback(
     (itemId: string, flavor: string | null = null) =>
       linesByKey[lineKey(itemId, flavor)]?.quantity ?? 0,
@@ -131,6 +136,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     () => ({
       lines,
       totalItems,
+      totalCost,
       note,
       setNote,
       getQuantity,
@@ -143,6 +149,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [
       lines,
       totalItems,
+      totalCost,
       note,
       getQuantity,
       getItemTotalQuantity,

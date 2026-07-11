@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { cartLimitFor, useCart } from "./CartContext";
+import { formatPrice } from "./format";
 import { submitShopCart } from "./actions";
 
 const PANEL_EXIT_DURATION = 220;
@@ -13,6 +14,7 @@ export function CartPanel() {
   const {
     lines,
     totalItems,
+    totalCost,
     note,
     setNote,
     setQuantity,
@@ -128,9 +130,12 @@ export function CartPanel() {
           </div>
         ) : (
           <>
-            <h2 className="font-display text-base font-medium text-ink-umber">
-              Coșul tău ({totalItems} {totalItems === 1 ? "obiect" : "obiecte"})
-            </h2>
+            <div className="flex items-baseline justify-between gap-4">
+              <h2 className="font-display text-base font-medium text-ink-umber">
+                Coșul tău ({totalItems} {totalItems === 1 ? "obiect" : "obiecte"})
+              </h2>
+              <p className="text-base font-semibold text-sage-deep">{formatPrice(totalCost)}</p>
+            </div>
 
             <div className="mt-4 flex flex-col gap-3">
               {lines.map((line) => {
@@ -150,6 +155,10 @@ export function CartPanel() {
                       {line.flavor && (
                         <span className="text-ink-umber-soft"> — {line.flavor}</span>
                       )}
+                      <span className="text-ink-umber-soft">
+                        {" "}
+                        · {formatPrice(line.item.cost * line.quantity)}
+                      </span>
                     </p>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center rounded-full border border-border-sand">

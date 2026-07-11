@@ -2,17 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cartLimitFor, useCart } from "./CartContext";
+import { formatPrice } from "./format";
 import type { ShopItem } from "./data";
 
 const CONFIRM_DURATION = 1100;
 const FOCUS_RING =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep";
-
-function formatPrice(bani: number): string {
-  const lei = bani / 100;
-  const formatted = Number.isInteger(lei) ? lei.toString() : lei.toFixed(2).replace(/0$/, "");
-  return `${formatted.replace(".", ",")} lei`;
-}
 
 export function ShopItemCard({ item }: { item: ShopItem }) {
   const { addToCart, getQuantity, getItemTotalQuantity } = useCart();
