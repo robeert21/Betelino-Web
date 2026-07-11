@@ -9,6 +9,7 @@ import {
   shopItems,
   pointLogs,
 } from "@/db/schema";
+import { resolveOrderedCost } from "@/app/magazin/shop-item";
 
 export type TeamWithPoints = {
   id: string;
@@ -148,6 +149,7 @@ export type ShopRequestLine = {
   itemFlavor: string | null;
   quantity: number;
   category: string | null;
+  lineTotal: number;
 };
 
 export type ShopRequestEntry = {
@@ -158,6 +160,7 @@ export type ShopRequestEntry = {
   note: string | null;
   status: string;
   createdAt: Date;
+  total: number;
 };
 
 export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> {
@@ -186,11 +189,14 @@ export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> 
       itemFlavor: shopRequestItems.itemFlavor,
       quantity: shopRequestItems.quantity,
       category: shopItems.category,
+      baseCost: shopItems.cost,
+      flavorsRaw: shopItems.flavors,
     })
     .from(shopRequestItems)
     .leftJoin(shopItems, eq(shopRequestItems.itemId, shopItems.id));
   const itemsByRequestId = new Map<string, ShopRequestLine[]>();
   for (const item of items) {
+    const unitCost = resolveOrderedCost(item.baseCost ?? 0, item.flavorsRaw, item.itemFlavor);
     const list = itemsByRequestId.get(item.shopRequestId) ?? [];
     list.push({
       id: item.id,
@@ -198,19 +204,24 @@ export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> 
       itemFlavor: item.itemFlavor,
       quantity: item.quantity,
       category: item.category,
+      lineTotal: unitCost * item.quantity,
     });
     itemsByRequestId.set(item.shopRequestId, list);
   }
 
-  return requests.map((request) => ({
-    id: request.id,
-    userName: request.userName,
-    userEmail: request.userEmail,
-    items: itemsByRequestId.get(request.id) ?? [],
-    note: request.note,
-    status: request.status,
-    createdAt: request.createdAt,
-  }));
+  return requests.map((request) => {
+    const requestItems = itemsByRequestId.get(request.id) ?? [];
+    return {
+      id: request.id,
+      userName: request.userName,
+      userEmail: request.userEmail,
+      items: requestItems,
+      note: request.note,
+      status: request.status,
+      createdAt: request.createdAt,
+      total: requestItems.reduce((sum, item) => sum + item.lineTotal, 0),
+    };
+  });
 }
 
 export type PointLogEntry = {

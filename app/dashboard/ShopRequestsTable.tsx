@@ -8,6 +8,7 @@ import {
 } from "./actions";
 import type { ShopRequestEntry } from "./data";
 import { SHOP_CATEGORY_LABELS, SHOP_CATEGORY_ORDER, isShopCategory } from "@/lib/shop-categories";
+import { formatPrice } from "@/app/magazin/format";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "În așteptare",
@@ -372,7 +373,7 @@ function ShoppingListPanel({
   );
 }
 
-function ItemsList({ request }: { request: ShopRequestEntry }) {
+function ItemsList({ request, status }: { request: ShopRequestEntry; status: string }) {
   return (
     <>
       <ul className="flex flex-col gap-2">
@@ -390,6 +391,11 @@ function ItemsList({ request }: { request: ShopRequestEntry }) {
         <p className="mt-3 whitespace-pre-wrap break-words rounded-[10px] bg-warm-cream py-2.5 pl-2.5 pr-4 text-xs text-ink-umber-soft">
           <span className="font-semibold text-ink-umber">Produse speciale: </span>
           {request.note}
+        </p>
+      )}
+      {status === "FULFILLED" && request.total > 0 && (
+        <p className="mt-3 text-sm font-semibold text-sage-deep">
+          De încasat la ridicare: {formatPrice(request.total)}
         </p>
       )}
     </>
@@ -465,7 +471,7 @@ function ShopRequestRow({
         </p>
       </td>
       <td className="px-6 py-6 align-top text-ink-umber">
-        <ItemsList request={request} />
+        <ItemsList request={request} status={status} />
       </td>
       <td className="whitespace-nowrap px-5 py-6 align-middle">
         <div className="flex flex-col items-center gap-1.5">
@@ -557,7 +563,7 @@ function ShopRequestCard({
       </p>
 
       <div className="mt-4 text-sm text-ink-umber">
-        <ItemsList request={request} />
+        <ItemsList request={request} status={status} />
       </div>
 
       {error && <p className="mt-2 text-xs text-signal-red">{error}</p>}

@@ -31,3 +31,33 @@ export function flavorCost(item: ShopItem, flavor: string | null): number {
   if (!flavor || !item.flavors) return item.cost;
   return item.flavors.find((f) => f.name === flavor)?.cost ?? item.cost;
 }
+
+export function parseFlavors(raw: string | null): ShopItemFlavor[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    return parsed.every(
+      (entry) =>
+        entry &&
+        typeof entry === "object" &&
+        typeof entry.name === "string" &&
+        typeof entry.cost === "number",
+    )
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// Resolves the price (in bani) of a variant chosen at order time, given the
+// raw JSON `flavors` column and base `cost` of the catalog row it came from.
+export function resolveOrderedCost(
+  baseCost: number,
+  flavorsRaw: string | null,
+  flavor: string | null,
+): number {
+  if (!flavor) return baseCost;
+  return parseFlavors(flavorsRaw)?.find((f) => f.name === flavor)?.cost ?? baseCost;
+}

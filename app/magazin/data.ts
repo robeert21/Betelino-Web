@@ -2,7 +2,7 @@ import { and, eq, gte, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import { shopItems, shopRequestItems, shopRequests } from "@/db/schema";
 import { isShopCategory } from "@/lib/shop-categories";
-import type { ShopItem, ShopItemFlavor } from "./shop-item";
+import { parseFlavors, type ShopItem } from "./shop-item";
 
 export {
   type ShopCategory,
@@ -11,25 +11,6 @@ export {
 } from "@/lib/shop-categories";
 
 export { type ShopItem, type ShopItemFlavor, flavorCost } from "./shop-item";
-
-function parseFlavors(raw: string | null): ShopItemFlavor[] | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return null;
-    return parsed.every(
-      (entry) =>
-        entry &&
-        typeof entry === "object" &&
-        typeof entry.name === "string" &&
-        typeof entry.cost === "number",
-    )
-      ? parsed
-      : null;
-  } catch {
-    return null;
-  }
-}
 
 function startOfTodayUTC(): Date {
   const start = new Date();
