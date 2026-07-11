@@ -1,10 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { users, passwordResetTokens } from "@/db/schema";
+import { users, passwordResetTokens, shopRequests } from "@/db/schema";
 import {
   createSession,
   destroySession,
@@ -266,4 +267,32 @@ export async function resetPasswordAction(
   ]);
 
   redirect("/cont/login?reset=succes");
+}
+
+// Lets a camper cancel their own order while it's still pending — once a
+// leader has acted on it (approved/rejected/etc.) it's no longer cancelable
+// here, and gets handled through the dashboard instead.
+export async function cancelShopOrderAction(formData: FormData): Promise<void> {
+  const session = await getSession();
+  if (!session) {
+    redirect("/cont/login");
+  }
+
+  const requestId = formData.get("requestId");
+  if (typeof requestId !== "string" || !requestId) {
+    return;
+  }
+
+  const db = await getDb();
+  await db
+    .delete(shopRequests)
+    .where(
+      and(
+        eq(shopRequests.id, requestId),
+        eq(shopRequests.userId, session.userId),
+        eq(shopRequests.status, "PENDING"),
+      ),
+    );
+
+  revalidatePath("/cont");
 }

@@ -41,9 +41,12 @@ export const shopItems = sqliteTable("shop_items", {
   imageUrl: text("image_url"),
   category: text("category").notNull().default("gustari"),
   flavors: text("flavors"),
+  // Max total quantity a single camper can order per calendar day (UTC),
+  // summed across all their non-rejected requests. Null means unlimited.
+  dailyLimit: integer("daily_limit"),
 });
 
-// Status is validated as "PENDING" | "APPROVED" | "REJECTED" in application code.
+// Status is validated as "PENDING" | "APPROVED" | "REJECTED" | "FULFILLED" | "DELIVERED" in application code.
 export const shopRequests = sqliteTable("shop_requests", {
   id: text("id")
     .primaryKey()

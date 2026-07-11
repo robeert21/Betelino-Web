@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, or, sql, count } from "drizzle-orm";
+import { and, eq, inArray, or, sql, count } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
 import { teams, users, shopRequests, pointLogs } from "@/db/schema";
@@ -133,6 +133,55 @@ export async function updateShopRequestStatusAction(
   }
 
   await db.update(shopRequests).set({ status }).where(eq(shopRequests.id, requestId));
+
+  revalidatePath("/dashboard/solicitari");
+  return {};
+}
+
+export async function markShopRequestDeliveredAction(
+  requestId: string,
+): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isLeaderRole(currentUser.role)) {
+    return { error: "Nu ai acces la această acțiune." };
+  }
+
+  const db = await getDb();
+  const [request] = await db
+    .select()
+    .from(shopRequests)
+    .where(eq(shopRequests.id, requestId))
+    .limit(1);
+  if (!request) {
+    return { error: "Cererea nu a fost găsită." };
+  }
+  if (request.status !== "FULFILLED") {
+    return { error: "Cererea trebuie cumpărată înainte de a fi predată." };
+  }
+
+  await db.update(shopRequests).set({ status: "DELIVERED" }).where(eq(shopRequests.id, requestId));
+
+  revalidatePath("/dashboard/solicitari");
+  return {};
+}
+
+export async function markShopRequestsFulfilledAction(
+  requestIds: string[],
+): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isLeaderRole(currentUser.role)) {
+    return { error: "Nu ai acces la această acțiune." };
+  }
+
+  if (requestIds.length === 0) {
+    return {};
+  }
+
+  const db = await getDb();
+  await db
+    .update(shopRequests)
+    .set({ status: "FULFILLED" })
+    .where(and(inArray(shopRequests.id, requestIds), eq(shopRequests.status, "APPROVED")));
 
   revalidatePath("/dashboard/solicitari");
   return {};

@@ -1,25 +1,16 @@
-import { getShopItems, SHOP_CATEGORY_LABELS, type ShopCategory } from "./data";
+import { getShopItems, SHOP_CATEGORY_LABELS, SHOP_CATEGORY_ORDER } from "./data";
 import { ShopItemCard } from "./ShopItemCard";
 import { CartProvider } from "./CartContext";
 import { CartPanel } from "./CartPanel";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata = {
   title: "Magazin — Betelino",
 };
 
-const CATEGORY_ORDER: ShopCategory[] = [
-  "chipsuri-snacks",
-  "dulciuri-gumate",
-  "ciocolata-batoane",
-  "biscuiti-napolitane",
-  "porumb-dulce",
-  "bauturi",
-  "guma-menta",
-  "igiena",
-];
-
 export default async function MagazinPage() {
-  const items = await getShopItems();
+  const user = await getCurrentUser();
+  const items = await getShopItems(user?.id);
 
   return (
     <CartProvider>
@@ -52,7 +43,7 @@ export default async function MagazinPage() {
 
         <div className="mx-auto max-w-[1800px] px-6 py-14 md:px-12 md:py-20 xl:px-20 2xl:px-28">
           <div className="mx-auto max-w-5xl divide-y divide-border-sand">
-            {CATEGORY_ORDER.map((category, sectionIndex) => {
+            {SHOP_CATEGORY_ORDER.map((category, sectionIndex) => {
               const categoryItems = items.filter((item) => item.category === category);
               if (categoryItems.length === 0) return null;
 

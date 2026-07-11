@@ -1,6 +1,6 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { users, teams, pointLogs } from "@/db/schema";
+import { users, teams, pointLogs, shopRequests, shopRequestItems, shopItems } from "@/db/schema";
 
 export type CamperAccount = {
   fullName: string;
@@ -68,4 +68,90 @@ export async function getCamperPointLogs(
     .limit(limit);
 
   return rows;
+}
+
+export type CamperShopOrderLine = {
+  id: string;
+  itemTitle: string;
+  itemFlavor: string | null;
+  quantity: number;
+  unitCost: number;
+  lineTotal: number;
+};
+
+export type CamperShopOrder = {
+  id: string;
+  status: string;
+  note: string | null;
+  createdAt: Date;
+  items: CamperShopOrderLine[];
+  total: number;
+};
+
+// The camper's own active shop request history (excludes DELIVERED — once
+// an order is handed over there's nothing left to track), with the current
+// catalog price (shop_items.cost) applied per line — request items don't
+// snapshot a price since the shop has none yet, so totals reflect prices as
+// they stand today and will update once prices are added.
+export async function getCamperShopOrders(
+  userId: string,
+): Promise<CamperShopOrder[]> {
+  const db = await getDb();
+  const requests = await db
+    .select({
+      id: shopRequests.id,
+      status: shopRequests.status,
+      note: shopRequests.note,
+      createdAt: shopRequests.createdAt,
+    })
+    .from(shopRequests)
+    .where(and(eq(shopRequests.userId, userId), ne(shopRequests.status, "DELIVERED")))
+    .orderBy(desc(shopRequests.createdAt));
+
+  if (requests.length === 0) return [];
+
+  const items = await db
+    .select({
+      shopRequestId: shopRequestItems.shopRequestId,
+      id: shopRequestItems.id,
+      itemTitle: shopRequestItems.itemTitle,
+      itemFlavor: shopRequestItems.itemFlavor,
+      quantity: shopRequestItems.quantity,
+      unitCost: shopItems.cost,
+    })
+    .from(shopRequestItems)
+    .leftJoin(shopItems, eq(shopRequestItems.itemId, shopItems.id))
+    .where(
+      inArray(
+        shopRequestItems.shopRequestId,
+        requests.map((request) => request.id),
+      ),
+    );
+
+  const itemsByRequestId = new Map<string, CamperShopOrderLine[]>();
+  for (const item of items) {
+    const unitCost = item.unitCost ?? 0;
+    const list = itemsByRequestId.get(item.shopRequestId) ?? [];
+    list.push({
+      id: item.id,
+      itemTitle: item.itemTitle,
+      itemFlavor: item.itemFlavor,
+      quantity: item.quantity,
+      unitCost,
+      lineTotal: unitCost * item.quantity,
+    });
+    itemsByRequestId.set(item.shopRequestId, list);
+  }
+
+  return requests.map((request) => {
+    const requestItems = itemsByRequestId.get(request.id) ?? [];
+    return {
+      id: request.id,
+      status: request.status,
+      note: request.note,
+      createdAt: request.createdAt,
+      items: requestItems,
+      total: requestItems.reduce((sum, item) => sum + item.lineTotal, 0),
+    };
+  });
 }

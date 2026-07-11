@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useCart } from "./CartContext";
+import { cartLimitFor, useCart } from "./CartContext";
 import type { ShopItem } from "./data";
-import { MAX_QUANTITY_PER_ITEM } from "./constants";
 
 const CONFIRM_DURATION = 1100;
 const FOCUS_RING =
@@ -16,8 +15,10 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const inCartTotal = getItemTotalQuantity(item.id);
-  const room = Math.max(0, MAX_QUANTITY_PER_ITEM - inCartTotal);
+  const cartLimit = cartLimitFor(item);
+  const room = Math.max(0, cartLimit - inCartTotal);
   const limitReached = room === 0;
+  const dailyLimitReached = item.remainingToday !== null && item.remainingToday <= 0;
   const confirmTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -46,6 +47,12 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
       <div className="flex flex-col">
         <h2 className="text-xl font-semibold text-ink-umber">{item.title}</h2>
 
+        {dailyLimitReached && inCartTotal === 0 && (
+          <p className="pt-2 text-sm font-semibold text-signal-red">
+            Ai atins limita zilnică pentru acest produs.
+          </p>
+        )}
+
         <div
           className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
           style={{ gridTemplateRows: inCartTotal > 0 ? "1fr" : "0fr" }}
@@ -55,7 +62,7 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
               className="pt-2 text-sm font-semibold text-sage-deep transition-opacity duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
               style={{ opacity: inCartTotal > 0 ? 1 : 0 }}
             >
-              {inCartTotal}/{MAX_QUANTITY_PER_ITEM} în coș
+              {inCartTotal}/{cartLimit} în coș
               {limitReached && " · limită atinsă"}
             </p>
           </div>
@@ -132,11 +139,13 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
         >
           {justAdded
             ? "Adăugat ✓"
-            : limitReached
-              ? "Limită atinsă (2)"
-              : hasFlavors && !selectedFlavor
-                ? "Alege o aromă"
-                : "Adaugă în coș"}
+            : dailyLimitReached
+              ? "Limită zilnică atinsă"
+              : limitReached
+                ? `Limită atinsă (${cartLimit})`
+                : hasFlavors && !selectedFlavor
+                  ? "Alege o aromă"
+                  : "Adaugă în coș"}
         </button>
       </div>
     </div>

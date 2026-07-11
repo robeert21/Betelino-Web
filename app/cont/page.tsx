@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { statSync } from "fs";
 import path from "path";
 import { getSession } from "@/lib/auth";
-import { getCamperAccount, getCamperPointLogs } from "./data";
+import { getCamperAccount, getCamperPointLogs, getCamperShopOrders } from "./data";
 import { logoutAction } from "./actions";
+import { CancelOrderButton } from "./CancelOrderButton";
 import { AddEmailForm } from "./AddEmailForm";
 
 function photoUrl(relativePath: string) {
@@ -19,6 +20,14 @@ function photoUrl(relativePath: string) {
 
 export const metadata = {
   title: "Contul meu — Betelino",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "În așteptare",
+  APPROVED: "Aprobată",
+  FULFILLED: "Cumpărată",
+  DELIVERED: "Predată",
+  REJECTED: "Respinsă",
 };
 
 const TEAM_GUIDES: Record<
@@ -59,7 +68,12 @@ export default async function ContPage() {
   }
 
   const pointLogs = await getCamperPointLogs(session.userId);
+  const shopOrders = await getCamperShopOrders(session.userId);
   const guide = TEAM_GUIDES[account.teamName];
+  const hasPrices = shopOrders.some((order) =>
+    order.items.some((item) => item.unitCost > 0),
+  );
+  const shopOrdersTotal = shopOrders.reduce((sum, order) => sum + order.total, 0);
 
   const rows = [
     { label: "Nume complet", value: account.fullName },
@@ -141,6 +155,92 @@ export default async function ContPage() {
             style={{ backgroundImage: `url(${photoUrl(guide.photo)})` }}
             aria-hidden
           />
+        </div>
+      )}
+
+      {shopOrders.length > 0 && (
+        <div className="mt-12">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="animate-fade-in font-display text-lg font-medium text-ink-umber">
+              Comenzi magazin
+            </h2>
+            {hasPrices && (
+              <p className="animate-fade-in text-sm font-semibold text-ink-umber-soft">
+                Total: <span className="tabular-nums text-ink-umber">{shopOrdersTotal} lei</span>
+              </p>
+            )}
+          </div>
+          {!hasPrices && (
+            <p className="animate-fade-in mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-umber-soft">
+              Prețurile în magazin nu sunt încă stabilite — suma de plată va apărea aici imediat ce vor fi adăugate.
+            </p>
+          )}
+          <div className="mt-6 space-y-4">
+            {shopOrders.map((order, index) => (
+              <div
+                key={order.id}
+                className="animate-fade-in rounded-[14px] bg-soft-linen px-8 py-6"
+                style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.04em] text-sage-deep">
+                    {order.createdAt.toLocaleString("ro-RO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      order.status === "REJECTED"
+                        ? "bg-signal-red/10 text-signal-red"
+                        : order.status === "DELIVERED"
+                          ? "bg-sage-deep/10 text-sage-deep"
+                          : "bg-border-sand/60 text-ink-umber-soft"
+                    }`}
+                  >
+                    {STATUS_LABELS[order.status] ?? order.status}
+                  </span>
+                </div>
+                <div className="mt-4 divide-y divide-border-sand">
+                  {order.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between gap-6 py-2.5 text-sm"
+                    >
+                      <p className="text-ink-umber">
+                        {item.itemTitle}
+                        {item.itemFlavor ? ` (${item.itemFlavor})` : ""}
+                        <span className="text-ink-umber-soft"> × {item.quantity}</span>
+                      </p>
+                      {hasPrices && (
+                        <p className="tabular-nums font-semibold text-ink-umber">
+                          {item.lineTotal} lei
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {order.note && (
+                  <p className="mt-3 text-sm italic text-ink-umber-soft">
+                    „{order.note}”
+                  </p>
+                )}
+                {hasPrices && (
+                  <div className="mt-3 flex items-center justify-between border-t border-border-sand pt-3">
+                    <p className="text-sm font-semibold text-ink-umber-soft">De plată</p>
+                    <p className="tabular-nums text-base font-semibold text-ink-umber">
+                      {order.total} lei
+                    </p>
+                  </div>
+                )}
+                {order.status === "PENDING" && (
+                  <CancelOrderButton requestId={order.id} />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

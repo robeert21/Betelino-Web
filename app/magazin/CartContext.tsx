@@ -20,6 +20,14 @@ function lineKey(itemId: string, flavor: string | null): string {
   return flavor ? `${itemId}::${flavor}` : itemId;
 }
 
+// Per-item cap for a single cart: the flat per-request ceiling, further
+// narrowed by whatever's left of the item's daily limit (if any).
+export function cartLimitFor(item: ShopItem): number {
+  return item.remainingToday == null
+    ? MAX_QUANTITY_PER_ITEM
+    : Math.min(MAX_QUANTITY_PER_ITEM, item.remainingToday);
+}
+
 function itemTotalExcluding(
   lines: Record<string, CartLine>,
   itemId: string,
@@ -57,7 +65,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setLinesByKey((current) => {
         const existingQuantity = current[key]?.quantity ?? 0;
         const otherFlavorsTotal = itemTotalExcluding(current, item.id, key);
-        const room = Math.max(0, MAX_QUANTITY_PER_ITEM - otherFlavorsTotal - existingQuantity);
+        const room = Math.max(0, cartLimitFor(item) - otherFlavorsTotal - existingQuantity);
         const nextQuantity = existingQuantity + Math.min(quantity, room);
         if (nextQuantity === existingQuantity) return current;
         return { ...current, [key]: { item, flavor, quantity: nextQuantity } };
@@ -87,7 +95,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           return next;
         }
         const otherFlavorsTotal = itemTotalExcluding(current, itemId, key);
-        const cappedQuantity = Math.min(quantity, MAX_QUANTITY_PER_ITEM - otherFlavorsTotal);
+        const cappedQuantity = Math.min(quantity, cartLimitFor(existing.item) - otherFlavorsTotal);
         if (cappedQuantity === existing.quantity) return current;
         return { ...current, [key]: { ...existing, quantity: cappedQuantity } };
       });

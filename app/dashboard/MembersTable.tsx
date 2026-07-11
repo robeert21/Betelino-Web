@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { assignTeamAction, assignRoleAction, assignCabinAction, deleteMemberAction } from "./actions";
 import type { MemberEntry, TeamWithPoints } from "./data";
 
@@ -15,7 +15,10 @@ const ROLE_OPTIONS = Object.entries(ROLE_LABELS);
 const CABIN_OPTIONS = Array.from({ length: 14 }, (_, i) => i + 1);
 
 const selectClassName =
-  "rounded-[8px] border border-border-sand bg-warm-cream px-3.5 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out hover:border-sage-trust/50 focus:border-sage-trust focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border-sand";
+  "w-full rounded-[8px] border border-border-sand bg-warm-cream px-3.5 py-2.5 text-sm text-ink-umber transition-colors duration-200 ease-out hover:border-sage-trust/50 focus:border-sage-trust focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border-sand";
+
+const compactSelectClassName =
+  "rounded-[8px] border border-border-sand bg-warm-cream px-3.5 py-2 text-xs text-ink-umber transition-colors duration-200 ease-out hover:border-sage-trust/50 focus:border-sage-trust focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border-sand";
 
 export function MembersTable({
   members,
@@ -26,44 +29,143 @@ export function MembersTable({
   teams: TeamWithPoints[];
   currentUserId: string;
 }) {
+  const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [liveMembers, setLiveMembers] = useState(members);
+
+  function handleRemoved(id: string) {
+    setLiveMembers((current) => current.filter((member) => member.id !== id));
+  }
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return liveMembers.filter((member) => {
+      if (roleFilter !== "ALL" && member.role !== roleFilter) return false;
+      if (!q) return true;
+      return (
+        member.name.toLowerCase().includes(q) ||
+        (member.email ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [liveMembers, query, roleFilter]);
+
+  const roleCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const member of liveMembers) {
+      counts[member.role] = (counts[member.role] ?? 0) + 1;
+    }
+    return counts;
+  }, [liveMembers]);
+
   return (
-    <div className="overflow-x-auto rounded-[16px] bg-soft-linen">
-      <table className="w-full min-w-[680px] border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-border-sand text-left text-ink-umber-soft">
-            <th className="px-7 py-5 font-medium">Nume</th>
-            <th className="px-7 py-5 font-medium">Email</th>
-            <th className="px-7 py-5 font-medium">Rol</th>
-            <th className="px-7 py-5 font-medium">Puncte</th>
-            <th className="px-7 py-5 font-medium">Echipă</th>
-            <th className="px-7 py-5 font-medium">Cabană</th>
-            <th className="px-7 py-5 font-medium"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((member) => (
-            <MemberRow
-              key={member.id}
-              member={member}
-              teams={teams}
-              isSelf={member.id === currentUserId}
-            />
-          ))}
-        </tbody>
-      </table>
+    <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:max-w-xs">
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Caută după nume sau email…"
+            className="w-full rounded-[8px] border border-border-sand bg-warm-cream px-4 py-2.5 text-sm text-ink-umber placeholder:text-ink-umber-soft/70 transition-colors duration-200 ease-out focus:border-sage-trust focus:outline-none"
+          />
+        </div>
+        <p className="text-xs text-ink-umber-soft">
+          {filtered.length} din {liveMembers.length} membri
+        </p>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <FilterPill
+          label={`Toți (${liveMembers.length})`}
+          active={roleFilter === "ALL"}
+          onClick={() => setRoleFilter("ALL")}
+        />
+        {ROLE_OPTIONS.map(([value, label]) => (
+          <FilterPill
+            key={value}
+            label={`${label} (${roleCounts[value] ?? 0})`}
+            active={roleFilter === value}
+            onClick={() => setRoleFilter(value)}
+          />
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="mt-8 rounded-[16px] bg-soft-linen px-7 py-7 text-sm text-ink-umber-soft">
+          Niciun membru nu corespunde căutării.
+        </p>
+      ) : (
+        <>
+          {/* Desktop / wide tablet table */}
+          <div className="mt-8 hidden overflow-x-auto rounded-[16px] bg-soft-linen xl:block">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border-sand text-left text-ink-umber-soft">
+                  <th className="px-7 py-5 font-medium">Membru</th>
+                  <th className="w-[13%] px-4 py-5 font-medium">Rol</th>
+                  <th className="w-[9%] px-4 py-5 font-medium">Puncte</th>
+                  <th className="w-[18%] px-4 py-5 font-medium">Echipă</th>
+                  <th className="w-[12%] px-4 py-5 font-medium">Cabană</th>
+                  <th className="w-[9%] px-4 py-5"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((member) => (
+                  <MemberRow
+                    key={member.id}
+                    member={member}
+                    teams={teams}
+                    isSelf={member.id === currentUserId}
+                    onRemoved={handleRemoved}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Card layout for phones and narrow tablets */}
+          <ul className="mt-8 flex flex-col gap-4 xl:hidden">
+            {filtered.map((member) => (
+              <MemberCard
+                key={member.id}
+                member={member}
+                teams={teams}
+                isSelf={member.id === currentUserId}
+                onRemoved={handleRemoved}
+              />
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
 
-function MemberRow({
-  member,
-  teams,
-  isSelf,
+function FilterPill({
+  label,
+  active,
+  onClick,
 }: {
-  member: MemberEntry;
-  teams: TeamWithPoints[];
-  isSelf: boolean;
+  label: string;
+  active: boolean;
+  onClick: () => void;
 }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep ${
+        active
+          ? "bg-sage-trust text-warm-cream"
+          : "bg-soft-linen text-ink-umber-soft hover:text-ink-umber"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function useMemberControls(member: MemberEntry, onRemoved: (id: string) => void) {
   const [teamId, setTeamId] = useState(member.teamId ?? "");
   const [role, setRole] = useState(member.role);
   const [cabin, setCabin] = useState(member.cabin != null ? String(member.cabin) : "");
@@ -71,7 +173,6 @@ function MemberRow({
   const [roleError, setRoleError] = useState<string | null>(null);
   const [cabinError, setCabinError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [deleted, setDeleted] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -126,24 +227,55 @@ function MemberRow({
         setDeleteError(result.error);
         setConfirmingDelete(false);
       } else {
-        setDeleted(true);
+        onRemoved(member.id);
       }
     });
   }
 
-  if (deleted) {
-    return null;
-  }
+  return {
+    teamId,
+    role,
+    cabin,
+    teamError,
+    roleError,
+    cabinError,
+    deleteError,
+    confirmingDelete,
+    isPending,
+    handleTeamChange,
+    handleRoleChange,
+    handleCabinChange,
+    handleDelete,
+    setConfirmingDelete,
+  };
+}
+
+function MemberRow({
+  member,
+  teams,
+  isSelf,
+  onRemoved,
+}: {
+  member: MemberEntry;
+  teams: TeamWithPoints[];
+  isSelf: boolean;
+  onRemoved: (id: string) => void;
+}) {
+  const c = useMemberControls(member, onRemoved);
 
   return (
-    <tr className="border-b border-border-sand last:border-0">
-      <td className="px-7 py-5 font-semibold text-ink-umber">{member.name}</td>
-      <td className="px-7 py-5 text-ink-umber-soft">{member.email}</td>
+    <tr className="border-b border-border-sand last:border-0 align-top">
       <td className="px-7 py-5">
+        <p className="font-semibold text-ink-umber">{member.name}</p>
+        {member.email && (
+          <p className="mt-0.5 break-all text-xs text-ink-umber-soft">{member.email}</p>
+        )}
+      </td>
+      <td className="px-4 py-5">
         <select
-          value={role}
-          disabled={isPending || isSelf}
-          onChange={(event) => handleRoleChange(event.target.value)}
+          value={c.role}
+          disabled={c.isPending || isSelf}
+          onChange={(event) => c.handleRoleChange(event.target.value)}
           className={selectClassName}
         >
           {ROLE_OPTIONS.map(([value, label]) => (
@@ -152,14 +284,14 @@ function MemberRow({
             </option>
           ))}
         </select>
-        {roleError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{roleError}</p>}
+        {c.roleError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{c.roleError}</p>}
       </td>
-      <td className="px-7 py-5 tabular-nums text-ink-umber">{member.points}</td>
-      <td className="px-7 py-5">
+      <td className="px-4 py-5 tabular-nums text-ink-umber">{member.points}</td>
+      <td className="px-4 py-5">
         <select
-          value={teamId}
-          disabled={isPending}
-          onChange={(event) => handleTeamChange(event.target.value)}
+          value={c.teamId}
+          disabled={c.isPending}
+          onChange={(event) => c.handleTeamChange(event.target.value)}
           className={selectClassName}
         >
           <option value="">Neatribuit</option>
@@ -169,13 +301,13 @@ function MemberRow({
             </option>
           ))}
         </select>
-        {teamError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{teamError}</p>}
+        {c.teamError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{c.teamError}</p>}
       </td>
-      <td className="px-7 py-5">
+      <td className="px-4 py-5">
         <select
-          value={cabin}
-          disabled={isPending}
-          onChange={(event) => handleCabinChange(event.target.value)}
+          value={c.cabin}
+          disabled={c.isPending}
+          onChange={(event) => c.handleCabinChange(event.target.value)}
           className={selectClassName}
         >
           <option value="">Neatribuită</option>
@@ -185,39 +317,147 @@ function MemberRow({
             </option>
           ))}
         </select>
-        {cabinError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{cabinError}</p>}
+        {c.cabinError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{c.cabinError}</p>}
       </td>
-      <td className="px-7 py-5 text-right">
+      <td className="px-4 py-5 text-right">
         {!isSelf && (
-          <div className="flex items-center justify-end gap-2">
-            {confirmingDelete && (
+          <div className="flex flex-col items-end gap-2">
+            {c.confirmingDelete && (
               <button
                 type="button"
-                onClick={() => setConfirmingDelete(false)}
-                disabled={isPending}
-                className="rounded-full px-4 py-2.5 text-sm font-medium text-ink-umber-soft transition-colors duration-200 ease-out hover:text-ink-umber focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep disabled:opacity-60"
+                onClick={() => c.setConfirmingDelete(false)}
+                disabled={c.isPending}
+                className="text-xs font-medium text-ink-umber-soft transition-colors duration-200 ease-out hover:text-ink-umber disabled:opacity-60"
               >
                 Anulează
               </button>
             )}
             <button
               type="button"
-              onClick={handleDelete}
-              disabled={isPending}
-              className={`rounded-full px-4 py-2.5 text-sm font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep disabled:cursor-not-allowed disabled:opacity-60 ${
-                confirmingDelete
+              onClick={c.handleDelete}
+              disabled={c.isPending}
+              className={`rounded-full px-4 py-2 text-xs font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep disabled:cursor-not-allowed disabled:opacity-60 ${
+                c.confirmingDelete
                   ? "bg-signal-red text-warm-cream hover:bg-signal-red/90"
                   : "border border-signal-red/30 text-signal-red hover:bg-signal-red/10"
               }`}
             >
-              {isPending ? "Se șterge…" : confirmingDelete ? "Sigur, șterge" : "Șterge"}
+              {c.isPending ? "Se șterge…" : c.confirmingDelete ? "Sigur, șterge" : "Șterge"}
             </button>
           </div>
         )}
-        {deleteError && (
-          <p className="mt-2 max-w-[220px] text-right text-xs text-signal-red">{deleteError}</p>
+        {c.deleteError && (
+          <p className="mt-2 max-w-[180px] text-right text-xs text-signal-red">{c.deleteError}</p>
         )}
       </td>
     </tr>
+  );
+}
+
+function MemberCard({
+  member,
+  teams,
+  isSelf,
+  onRemoved,
+}: {
+  member: MemberEntry;
+  teams: TeamWithPoints[];
+  isSelf: boolean;
+  onRemoved: (id: string) => void;
+}) {
+  const c = useMemberControls(member, onRemoved);
+  const hasFieldError = c.roleError || c.teamError || c.cabinError || c.deleteError;
+
+  return (
+    <li className="rounded-[16px] bg-soft-linen px-6 py-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-ink-umber">{member.name}</p>
+          {member.email && (
+            <p className="mt-0.5 truncate text-xs text-ink-umber-soft">{member.email}</p>
+          )}
+        </div>
+
+        <p className="shrink-0 tabular-nums text-sm font-semibold text-ink-umber">
+          {member.points}p
+        </p>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2.5">
+        <select
+          value={c.role}
+          disabled={c.isPending || isSelf}
+          onChange={(event) => c.handleRoleChange(event.target.value)}
+          className={compactSelectClassName}
+        >
+          {ROLE_OPTIONS.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={c.teamId}
+          disabled={c.isPending}
+          onChange={(event) => c.handleTeamChange(event.target.value)}
+          className={compactSelectClassName}
+        >
+          <option value="">Neatribuit</option>
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={c.cabin}
+          disabled={c.isPending}
+          onChange={(event) => c.handleCabinChange(event.target.value)}
+          className={compactSelectClassName}
+        >
+          <option value="">Cabană —</option>
+          {CABIN_OPTIONS.map((number) => (
+            <option key={number} value={number}>
+              Cabana {number}
+            </option>
+          ))}
+        </select>
+
+        {!isSelf && (
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            {c.confirmingDelete && (
+              <button
+                type="button"
+                onClick={() => c.setConfirmingDelete(false)}
+                disabled={c.isPending}
+                className="text-xs font-medium text-ink-umber-soft transition-colors duration-200 ease-out hover:text-ink-umber disabled:opacity-60"
+              >
+                Anulează
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={c.handleDelete}
+              disabled={c.isPending}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep disabled:cursor-not-allowed disabled:opacity-60 ${
+                c.confirmingDelete
+                  ? "bg-signal-red text-warm-cream hover:bg-signal-red/90"
+                  : "border border-signal-red/30 text-signal-red hover:bg-signal-red/10"
+              }`}
+            >
+              {c.isPending ? "Se șterge…" : c.confirmingDelete ? "Sigur, șterge" : "Șterge"}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {hasFieldError && (
+        <p className="mt-2 text-xs text-signal-red">
+          {c.roleError || c.teamError || c.cabinError || c.deleteError}
+        </p>
+      )}
+    </li>
   );
 }

@@ -16,19 +16,22 @@ export type CartLineInput = {
 export async function submitShopCart(
   cartLines: CartLineInput[],
   note?: string,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; warning?: string }> {
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, error: "Trebuie să fii autentificat." };
   }
 
   const trimmedNote = note?.trim() || null;
-  const validLines = cartLines.filter((line) => line.quantity > 0);
+  let validLines = cartLines.filter((line) => line.quantity > 0);
   if (validLines.length === 0 && !trimmedNote) {
     return { success: false, error: "Coșul este gol." };
   }
 
-  const items = await getShopItems();
+  // Fetched with the camper's id so item.remainingToday reflects what
+  // they've already ordered today (authoritative — never trust the
+  // client's view of the daily limit).
+  const items = await getShopItems(user.id);
   const itemsById = new Map(items.map((item) => [item.id, item]));
 
   for (const line of validLines) {
@@ -57,6 +60,40 @@ export async function submitShopCart(
     }
   }
 
+  // Cap (or fully drop) lines for items where the daily limit has been
+  // reached, so the rest of the cart still goes through — only the
+  // maxed-out products get excluded, not the whole request.
+  const droppedItemTitles: string[] = [];
+  const cappedItemTitles: string[] = [];
+  const remainingByItemId = new Map(
+    items.filter((item) => item.remainingToday !== null).map((item) => [item.id, item.remainingToday!]),
+  );
+  if (remainingByItemId.size > 0) {
+    validLines = validLines.flatMap((line) => {
+      const remaining = remainingByItemId.get(line.itemId);
+      if (remaining === undefined) return [line];
+      const item = itemsById.get(line.itemId)!;
+      if (remaining <= 0) {
+        if (!droppedItemTitles.includes(item.title)) droppedItemTitles.push(item.title);
+        return [];
+      }
+      if (line.quantity > remaining) {
+        if (!cappedItemTitles.includes(item.title)) cappedItemTitles.push(item.title);
+        remainingByItemId.set(line.itemId, 0);
+        return [{ ...line, quantity: remaining }];
+      }
+      remainingByItemId.set(line.itemId, remaining - line.quantity);
+      return [line];
+    });
+  }
+
+  if (validLines.length === 0 && !trimmedNote) {
+    return {
+      success: false,
+      error: "Ai atins limita zilnică pentru toate produsele din coș.",
+    };
+  }
+
   const db = await getDb();
   const [request] = await db
     .insert(shopRequests)
@@ -79,5 +116,20 @@ export async function submitShopCart(
   }
 
   revalidatePath("/dashboard/solicitari");
-  return { success: true };
+
+  const warningParts: string[] = [];
+  if (droppedItemTitles.length > 0) {
+    warningParts.push(
+      `Ai atins limita zilnică pentru: ${droppedItemTitles.join(", ")} — ${
+        droppedItemTitles.length === 1 ? "nu a fost inclus" : "nu au fost incluse"
+      } în cerere.`,
+    );
+  }
+  if (cappedItemTitles.length > 0) {
+    warningParts.push(
+      `Cantitatea a fost redusă la limita zilnică pentru: ${cappedItemTitles.join(", ")}.`,
+    );
+  }
+
+  return { success: true, warning: warningParts.length > 0 ? warningParts.join(" ") : undefined };
 }

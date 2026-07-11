@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useCart } from "./CartContext";
+import { cartLimitFor, useCart } from "./CartContext";
 import { submitShopCart } from "./actions";
-import { MAX_QUANTITY_PER_ITEM } from "./constants";
 
 const PANEL_EXIT_DURATION = 220;
 const LINE_EXIT_DURATION = 180;
@@ -23,6 +22,7 @@ export function CartPanel() {
   } = useCart();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const shouldShow = totalItems > 0 || sent;
@@ -81,6 +81,7 @@ export function CartPanel() {
 
   function handleSubmit() {
     setError(null);
+    setWarning(null);
     startTransition(async () => {
       const result = await submitShopCart(
         lines.map((line) => ({
@@ -92,6 +93,7 @@ export function CartPanel() {
       );
       if (result.success) {
         clearCart();
+        setWarning(result.warning ?? null);
         setSent(true);
       } else {
         setError(result.error ?? "A apărut o eroare.");
@@ -108,9 +110,14 @@ export function CartPanel() {
       <div key={sent ? "sent" : "cart"} className="animate-fade-in">
         {sent ? (
           <div className="flex items-center justify-between gap-4">
-            <p className="text-sm font-semibold text-sage-deep">
-              Cererea a fost trimisă către lideri.
-            </p>
+            <div>
+              <p className="text-sm font-semibold text-sage-deep">
+                Cererea a fost trimisă către lideri.
+              </p>
+              {warning && (
+                <p className="mt-1.5 text-xs text-signal-red">{warning}</p>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setSent(false)}
@@ -160,7 +167,10 @@ export function CartPanel() {
                         </span>
                         <button
                           type="button"
-                          disabled={isPending || getItemTotalQuantity(line.item.id) >= MAX_QUANTITY_PER_ITEM}
+                          disabled={
+                            isPending ||
+                            getItemTotalQuantity(line.item.id) >= cartLimitFor(line.item)
+                          }
                           onClick={() => setQuantity(line.item.id, line.quantity + 1, line.flavor)}
                           aria-label={`Crește cantitatea pentru ${label}`}
                           className={`px-2.5 py-1.5 text-sm font-semibold text-ink-umber transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-90 disabled:opacity-40 ${FOCUS_RING}`}

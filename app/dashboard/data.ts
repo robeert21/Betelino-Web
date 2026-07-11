@@ -6,6 +6,7 @@ import {
   users,
   shopRequests,
   shopRequestItems,
+  shopItems,
   pointLogs,
 } from "@/db/schema";
 
@@ -146,6 +147,7 @@ export type ShopRequestLine = {
   itemTitle: string;
   itemFlavor: string | null;
   quantity: number;
+  category: string | null;
 };
 
 export type ShopRequestEntry = {
@@ -176,7 +178,17 @@ export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> 
 
   if (requests.length === 0) return [];
 
-  const items = await db.select().from(shopRequestItems);
+  const items = await db
+    .select({
+      id: shopRequestItems.id,
+      shopRequestId: shopRequestItems.shopRequestId,
+      itemTitle: shopRequestItems.itemTitle,
+      itemFlavor: shopRequestItems.itemFlavor,
+      quantity: shopRequestItems.quantity,
+      category: shopItems.category,
+    })
+    .from(shopRequestItems)
+    .leftJoin(shopItems, eq(shopRequestItems.itemId, shopItems.id));
   const itemsByRequestId = new Map<string, ShopRequestLine[]>();
   for (const item of items) {
     const list = itemsByRequestId.get(item.shopRequestId) ?? [];
@@ -185,6 +197,7 @@ export async function getShopRequests(limit = 100): Promise<ShopRequestEntry[]> 
       itemTitle: item.itemTitle,
       itemFlavor: item.itemFlavor,
       quantity: item.quantity,
+      category: item.category,
     });
     itemsByRequestId.set(item.shopRequestId, list);
   }
