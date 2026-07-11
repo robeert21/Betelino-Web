@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { ShopItem } from "./data";
+import { flavorCost, type ShopItem } from "./shop-item";
 import { MAX_QUANTITY_PER_ITEM } from "./constants";
 
 type CartLine = {
@@ -115,7 +115,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [lines],
   );
   const totalCost = useMemo(
-    () => lines.reduce((sum, line) => sum + line.item.cost * line.quantity, 0),
+    () => lines.reduce((sum, line) => sum + flavorCost(line.item, line.flavor) * line.quantity, 0),
     [lines],
   );
   const getQuantity = useCallback(

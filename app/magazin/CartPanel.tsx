@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { cartLimitFor, useCart } from "./CartContext";
 import { formatPrice } from "./format";
+import { flavorCost } from "./shop-item";
 import { submitShopCart } from "./actions";
 
 const PANEL_EXIT_DURATION = 220;
@@ -157,7 +158,7 @@ export function CartPanel() {
                       )}
                       <span className="text-ink-umber-soft">
                         {" "}
-                        · {formatPrice(line.item.cost * line.quantity)}
+                        · {formatPrice(flavorCost(line.item, line.flavor) * line.quantity)}
                       </span>
                     </p>
                     <div className="flex items-center gap-3">

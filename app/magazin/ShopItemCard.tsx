@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cartLimitFor, useCart } from "./CartContext";
 import { formatPrice } from "./format";
-import type { ShopItem } from "./data";
+import { flavorCost, type ShopItem } from "./shop-item";
 
 const CONFIRM_DURATION = 1100;
 const FOCUS_RING =
@@ -21,6 +21,15 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
   const limitReached = room === 0;
   const dailyLimitReached = item.remainingToday !== null && item.remainingToday <= 0;
   const confirmTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const priceLabel = useMemo(() => {
+    if (!hasFlavors) return formatPrice(item.cost);
+    if (selectedFlavor) return formatPrice(flavorCost(item, selectedFlavor));
+    const costs = item.flavors!.map((f) => f.cost);
+    const min = Math.min(...costs);
+    const max = Math.max(...costs);
+    return min === max ? formatPrice(min) : `${formatPrice(min)} – ${formatPrice(max)}`;
+  }, [hasFlavors, item, selectedFlavor]);
 
   useEffect(() => {
     setQuantity((q) => Math.min(q, Math.max(1, room)));
@@ -48,9 +57,7 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
       <div className="flex flex-col">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-xl font-semibold text-ink-umber">{item.title}</h2>
-          <span className="shrink-0 text-sm font-semibold text-sage-deep">
-            {formatPrice(item.cost)}
-          </span>
+          <span className="shrink-0 text-sm font-semibold text-sage-deep">{priceLabel}</span>
         </div>
 
         {dailyLimitReached && inCartTotal === 0 && (
@@ -78,22 +85,25 @@ export function ShopItemCard({ item }: { item: ShopItem }) {
       {hasFlavors && (
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={`Aromă pentru ${item.title}`}>
           {item.flavors!.map((flavor) => {
-            const active = selectedFlavor === flavor;
-            const flavorCount = getQuantity(item.id, flavor);
+            const active = selectedFlavor === flavor.name;
+            const flavorCount = getQuantity(item.id, flavor.name);
             return (
               <button
-                key={flavor}
+                key={flavor.name}
                 type="button"
                 role="radio"
                 aria-checked={active}
-                onClick={() => setSelectedFlavor(flavor)}
+                onClick={() => setSelectedFlavor(flavor.name)}
                 className={`relative rounded-full border px-3.5 py-2 text-sm font-medium transition-[background-color,color,border-color,transform] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-95 ${FOCUS_RING} ${
                   active
                     ? "border-transparent bg-sage-deep text-warm-cream"
                     : "border-border-sand bg-warm-cream text-ink-umber hover:border-sage-deep/50"
                 }`}
               >
-                {flavor}
+                {flavor.name}
+                <span className={`ml-1.5 tabular-nums ${active ? "text-warm-cream/75" : "text-ink-umber-soft"}`}>
+                  · {formatPrice(flavor.cost)}
+                </span>
                 {flavorCount > 0 && (
                   <span
                     className={`ml-1.5 tabular-nums ${active ? "text-warm-cream/75" : "text-sage-deep"}`}

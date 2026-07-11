@@ -1,7 +1,8 @@
 import { and, eq, gte, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import { shopItems, shopRequestItems, shopRequests } from "@/db/schema";
-import { isShopCategory, type ShopCategory } from "@/lib/shop-categories";
+import { isShopCategory } from "@/lib/shop-categories";
+import type { ShopItem, ShopItemFlavor } from "./shop-item";
 
 export {
   type ShopCategory,
@@ -9,27 +10,22 @@ export {
   SHOP_CATEGORY_ORDER,
 } from "@/lib/shop-categories";
 
-export type ShopItem = {
-  id: string;
-  title: string;
-  category: ShopCategory;
-  flavors: string[] | null;
-  // Price in bani (1 leu = 100 bani), for display only.
-  cost: number;
-  dailyLimit: number | null;
-  // How many of this item the camper can still order today, given
-  // dailyLimit and what they already ordered (any non-rejected request
-  // counts, immediately, so pending requests reserve their share too).
-  // Null when the item has no daily limit. Always equals dailyLimit
-  // (nothing consumed yet) when called without a userId.
-  remainingToday: number | null;
-};
+export { type ShopItem, type ShopItemFlavor, flavorCost } from "./shop-item";
 
-function parseFlavors(raw: string | null): string[] | null {
+function parseFlavors(raw: string | null): ShopItemFlavor[] | null {
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    return parsed.every(
+      (entry) =>
+        entry &&
+        typeof entry === "object" &&
+        typeof entry.name === "string" &&
+        typeof entry.cost === "number",
+    )
+      ? parsed
+      : null;
   } catch {
     return null;
   }

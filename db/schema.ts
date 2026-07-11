@@ -28,9 +28,10 @@ export const users = sqliteTable("users", {
 });
 
 // category is validated as one of SHOP_CATEGORIES (see app/magazin/data.ts)
-// in application code. flavors is a JSON-encoded string[] of variant options
-// (e.g. flavors, scents) a camper must choose between before ordering; null
-// when the item has no variants.
+// in application code. flavors is a JSON-encoded { name, cost }[] of variant
+// options (e.g. flavors, sizes) a camper must choose between before
+// ordering, each with its own price in bani; null when the item has no
+// variants, in which case top-level cost applies.
 export const shopItems = sqliteTable("shop_items", {
   id: text("id")
     .primaryKey()

@@ -1,6 +1,17 @@
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { getDb } from "@/db";
 import { users, teams, pointLogs, shopRequests, shopRequestItems, shopItems } from "@/db/schema";
+import type { ShopItemFlavor } from "@/app/magazin/shop-item";
+
+function parseFlavors(raw: string | null): ShopItemFlavor[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 export type CamperAccount = {
   fullName: string;
@@ -117,7 +128,8 @@ export async function getCamperShopOrders(
       itemTitle: shopRequestItems.itemTitle,
       itemFlavor: shopRequestItems.itemFlavor,
       quantity: shopRequestItems.quantity,
-      unitCost: shopItems.cost,
+      baseCost: shopItems.cost,
+      flavorsRaw: shopItems.flavors,
     })
     .from(shopRequestItems)
     .leftJoin(shopItems, eq(shopRequestItems.itemId, shopItems.id))
@@ -130,7 +142,11 @@ export async function getCamperShopOrders(
 
   const itemsByRequestId = new Map<string, CamperShopOrderLine[]>();
   for (const item of items) {
-    const unitCost = item.unitCost ?? 0;
+    const baseCost = item.baseCost ?? 0;
+    const flavors = parseFlavors(item.flavorsRaw);
+    const unitCost =
+      (item.itemFlavor ? flavors?.find((f) => f.name === item.itemFlavor)?.cost : undefined) ??
+      baseCost;
     const list = itemsByRequestId.get(item.shopRequestId) ?? [];
     list.push({
       id: item.id,

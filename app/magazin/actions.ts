@@ -40,7 +40,7 @@ export async function submitShopCart(
       return { success: false, error: "Un obiect din coș nu a fost găsit." };
     }
     if (item.flavors && item.flavors.length > 0) {
-      if (!line.flavor || !item.flavors.includes(line.flavor)) {
+      if (!line.flavor || !item.flavors.some((f) => f.name === line.flavor)) {
         return { success: false, error: `Alege o aromă pentru ${item.title}.` };
       }
     }
