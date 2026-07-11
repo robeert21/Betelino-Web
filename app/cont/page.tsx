@@ -6,6 +6,7 @@ import { getCamperAccount, getCamperPointLogs, getCamperShopOrders } from "./dat
 import { logoutAction } from "./actions";
 import { CancelOrderButton } from "./CancelOrderButton";
 import { AddEmailForm } from "./AddEmailForm";
+import { formatPrice } from "@/app/magazin/format";
 
 function photoUrl(relativePath: string) {
   try {
@@ -166,7 +167,7 @@ export default async function ContPage() {
             </h2>
             {hasPrices && (
               <p className="animate-fade-in text-sm font-semibold text-ink-umber-soft">
-                Total: <span className="tabular-nums text-ink-umber">{shopOrdersTotal} lei</span>
+                Total: <span className="tabular-nums text-ink-umber">{formatPrice(shopOrdersTotal)}</span>
               </p>
             )}
           </div>
@@ -216,7 +217,7 @@ export default async function ContPage() {
                       </p>
                       {hasPrices && (
                         <p className="tabular-nums font-semibold text-ink-umber">
-                          {item.lineTotal} lei
+                          {formatPrice(item.lineTotal)}
                         </p>
                       )}
                     </div>
@@ -231,7 +232,7 @@ export default async function ContPage() {
                   <div className="mt-3 flex items-center justify-between border-t border-border-sand pt-3">
                     <p className="text-sm font-semibold text-ink-umber-soft">De plată</p>
                     <p className="tabular-nums text-base font-semibold text-ink-umber">
-                      {order.total} lei
+                      {formatPrice(order.total)}
                     </p>
                   </div>
                 )}
