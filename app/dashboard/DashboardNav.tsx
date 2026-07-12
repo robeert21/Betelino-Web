@@ -14,6 +14,7 @@ export function DashboardNav({
 
   const items = [
     { href: "/dashboard", label: "Puncte" },
+    { href: "/dashboard/amenzi", label: "Amenzi" },
     { href: "/dashboard/solicitari", label: "Solicitări" },
     ...(isCalauza || isAdmin ? [{ href: "/dashboard/echipa", label: "Membrii echipei" }] : []),
     ...(isAdmin ? [{ href: "/dashboard/membri", label: "Membri" }] : []),

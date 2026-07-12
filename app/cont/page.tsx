@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { statSync } from "fs";
 import path from "path";
 import { getSession } from "@/lib/auth";
-import { getCamperAccount, getCamperPointLogs, getCamperShopOrders } from "./data";
+import { getCamperAccount, getCamperPointLogs, getCamperShopOrders, getCamperFines } from "./data";
 import { logoutAction } from "./actions";
 import { CancelOrderButton } from "./CancelOrderButton";
 import { AddEmailForm } from "./AddEmailForm";
@@ -70,6 +70,10 @@ export default async function ContPage() {
 
   const pointLogs = await getCamperPointLogs(session.userId);
   const shopOrders = await getCamperShopOrders(session.userId);
+  const camperFines = await getCamperFines(session.userId);
+  const unpaidFines = camperFines.filter((fine) => !fine.paidAt);
+  const unpaidFinesCount = unpaidFines.length;
+  const unpaidFinesTotal = unpaidFines.reduce((sum, fine) => sum + fine.amount, 0);
   const guide = TEAM_GUIDES[account.teamName];
   const hasPrices = shopOrders.some((order) =>
     order.items.some((item) => item.unitCost > 0),
@@ -239,6 +243,62 @@ export default async function ContPage() {
                 {order.status === "PENDING" && (
                   <CancelOrderButton requestId={order.id} />
                 )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {camperFines.length > 0 && (
+        <div className="mt-12">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="animate-fade-in font-display text-lg font-medium text-ink-umber">
+              Amenzi
+            </h2>
+            <p className="animate-fade-in text-sm font-semibold text-ink-umber-soft">
+              {camperFines.length} {camperFines.length === 1 ? "amendă" : "amenzi"}
+              {unpaidFinesCount > 0 && (
+                <span className="text-signal-red"> · {unpaidFinesCount} neplătite</span>
+              )}
+            </p>
+          </div>
+          {unpaidFinesTotal > 0 && (
+            <p className="animate-fade-in mt-2 text-sm text-ink-umber-soft">
+              De plată: <span className="font-semibold text-signal-red">{formatPrice(unpaidFinesTotal)}</span>
+            </p>
+          )}
+          <div className="mt-6 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-8">
+            {camperFines.map((fine, index) => (
+              <div
+                key={fine.id}
+                className="animate-fade-in flex items-center justify-between gap-6 py-5"
+                style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink-umber">{fine.reason}</p>
+                  <p className="text-xs text-ink-umber-soft">
+                    {fine.createdAt.toLocaleString("ro-RO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="tabular-nums text-sm font-semibold text-ink-umber">
+                    {formatPrice(fine.amount)}
+                  </span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      fine.paidAt
+                        ? "bg-sage-deep/10 text-sage-deep"
+                        : "bg-signal-red/10 text-signal-red"
+                    }`}
+                  >
+                    {fine.paidAt ? "Plătită" : "Neplătită"}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

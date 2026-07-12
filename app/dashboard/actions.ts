@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { and, eq, inArray, or, sql, count } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
-import { teams, users, shopRequests, pointLogs } from "@/db/schema";
+import { teams, users, shopRequests, pointLogs, fines } from "@/db/schema";
 import { getCurrentUser, isLeaderRole, isAdminRole } from "@/lib/auth";
 
 const ASSIGNABLE_ROLES = ["CAMPER", "STAFF", "ADMIN", "CALAUZA"] as const;
@@ -102,6 +102,79 @@ export async function addTeamPointsAction(
 
   revalidatePath("/dashboard");
   return { success: true };
+}
+
+export type AddFineState = {
+  error?: string;
+  success?: boolean;
+};
+
+const addFineSchema = z.object({
+  userId: z.string().min(1, "Selectează un copil."),
+  reason: z.string().trim().min(1, "Motivul este obligatoriu.").max(280),
+  amount: z.coerce
+    .number()
+    .min(0, "Costul nu poate fi negativ.")
+    .transform((lei) => Math.round(lei * 100)),
+});
+
+export async function addFineAction(
+  _prevState: AddFineState,
+  formData: FormData,
+): Promise<AddFineState> {
+  const user = await getCurrentUser();
+  if (!user || !isLeaderRole(user.role)) {
+    return { error: "Nu ai acces la această acțiune." };
+  }
+
+  const parsed = addFineSchema.safeParse({
+    userId: formData.get("userId"),
+    reason: formData.get("reason") || undefined,
+    amount: formData.get("amount") || 0,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
+  }
+
+  const { userId, reason, amount } = parsed.data;
+  const db = await getDb();
+
+  const [member] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
+  if (!member) {
+    return { error: "Copilul nu a fost găsit." };
+  }
+
+  await db.insert(fines).values({ userId, reason, amount, createdById: user.id });
+
+  revalidatePath("/dashboard/amenzi");
+  revalidatePath("/cont");
+  return { success: true };
+}
+
+export async function toggleFinePaidAction(
+  fineId: string,
+  paid: boolean,
+): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isLeaderRole(currentUser.role)) {
+    return { error: "Nu ai acces la această acțiune." };
+  }
+
+  const db = await getDb();
+  const [fine] = await db.select({ id: fines.id }).from(fines).where(eq(fines.id, fineId)).limit(1);
+  if (!fine) {
+    return { error: "Amenda nu a fost găsită." };
+  }
+
+  await db
+    .update(fines)
+    .set({ paidAt: paid ? new Date() : null })
+    .where(eq(fines.id, fineId));
+
+  revalidatePath("/dashboard/amenzi");
+  revalidatePath("/cont");
+  return {};
 }
 
 const SHOP_REQUEST_STATUSES = ["APPROVED", "REJECTED"] as const;

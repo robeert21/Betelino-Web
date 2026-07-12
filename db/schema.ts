@@ -102,6 +102,27 @@ export const pointLogs = sqliteTable("point_logs", {
     .$defaultFn(() => new Date()),
 });
 
+// A fine a leader issues to a specific camper for misbehavior. reason is
+// mandatory. amount is the cost in bani (lei * 100), matching shopItems.cost.
+// paidAt is null until a leader marks it as paid.
+export const fines = sqliteTable("fines", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  reason: text("reason").notNull(),
+  amount: integer("amount").notNull().default(0),
+  createdById: text("created_by_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  paidAt: integer("paid_at", { mode: "timestamp_ms" }),
+});
+
 export const passwordResetTokens = sqliteTable("password_reset_tokens", {
   id: text("id")
     .primaryKey()

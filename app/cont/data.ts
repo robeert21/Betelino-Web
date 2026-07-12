@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { getDb } from "@/db";
-import { users, teams, pointLogs, shopRequests, shopRequestItems, shopItems } from "@/db/schema";
+import { users, teams, pointLogs, shopRequests, shopRequestItems, shopItems, fines } from "@/db/schema";
 import { resolveOrderedCost } from "@/app/magazin/shop-item";
 
 export type CamperAccount = {
@@ -67,6 +67,33 @@ export async function getCamperPointLogs(
     .where(eq(pointLogs.userId, userId))
     .orderBy(desc(pointLogs.createdAt))
     .limit(limit);
+
+  return rows;
+}
+
+export type CamperFineEntry = {
+  id: string;
+  reason: string;
+  amount: number;
+  createdAt: Date;
+  paidAt: Date | null;
+};
+
+// The camper's own fines, most recent first — shown alongside paid status
+// in their account so they know what they owe.
+export async function getCamperFines(userId: string): Promise<CamperFineEntry[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      id: fines.id,
+      reason: fines.reason,
+      amount: fines.amount,
+      createdAt: fines.createdAt,
+      paidAt: fines.paidAt,
+    })
+    .from(fines)
+    .where(eq(fines.userId, userId))
+    .orderBy(desc(fines.createdAt));
 
   return rows;
 }

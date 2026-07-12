@@ -8,6 +8,7 @@ import {
   shopRequestItems,
   shopItems,
   pointLogs,
+  fines,
 } from "@/db/schema";
 import { resolveOrderedCost } from "@/app/magazin/shop-item";
 
@@ -257,4 +258,37 @@ export async function getRecentPointLogs(limit = 30): Promise<PointLogEntry[]> {
     .limit(limit);
 
   return rows.map((row) => ({ ...row, memberName: row.memberName ?? null }));
+}
+
+export type FineEntry = {
+  id: string;
+  userName: string;
+  reason: string;
+  amount: number;
+  createdByName: string;
+  createdAt: Date;
+  paidAt: Date | null;
+};
+
+export async function getAllFines(limit = 100): Promise<FineEntry[]> {
+  const db = await getDb();
+  const createdByUsers = alias(users, "fine_created_by_users");
+
+  const rows = await db
+    .select({
+      id: fines.id,
+      reason: fines.reason,
+      amount: fines.amount,
+      createdAt: fines.createdAt,
+      paidAt: fines.paidAt,
+      userName: users.name,
+      createdByName: createdByUsers.name,
+    })
+    .from(fines)
+    .innerJoin(users, eq(fines.userId, users.id))
+    .innerJoin(createdByUsers, eq(fines.createdById, createdByUsers.id))
+    .orderBy(desc(fines.createdAt))
+    .limit(limit);
+
+  return rows;
 }

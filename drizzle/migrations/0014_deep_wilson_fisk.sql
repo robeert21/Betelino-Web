@@ -1,0 +1,1 @@
+ALTER TABLE `fines` ADD `amount` integer DEFAULT 0 NOT NULL;
