@@ -30,7 +30,7 @@ export default async function DashboardFinesPage() {
         <h2 className="animate-fade-in font-display text-lg font-medium text-ink-umber">
           Istoric amenzi
         </h2>
-        <div className="mt-6 rounded-[16px] bg-soft-linen px-7">
+        <div className="mt-6">
           <FinesTable fines={allFines} />
         </div>
       </div>

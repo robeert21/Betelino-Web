@@ -267,15 +267,15 @@ export default async function ContPage() {
               De plată: <span className="font-semibold text-signal-red">{formatPrice(unpaidFinesTotal)}</span>
             </p>
           )}
-          <div className="mt-6 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-8">
+          <div className="mt-6 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-6 sm:px-8">
             {camperFines.map((fine, index) => (
               <div
                 key={fine.id}
-                className="animate-fade-in flex items-center justify-between gap-6 py-5"
+                className="animate-fade-in flex flex-col gap-2 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
                 style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-ink-umber">{fine.reason}</p>
+                  <p className="text-sm font-semibold text-ink-umber break-words">{fine.reason}</p>
                   <p className="text-xs text-ink-umber-soft">
                     {fine.createdAt.toLocaleString("ro-RO", {
                       day: "2-digit",
