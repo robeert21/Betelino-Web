@@ -9,6 +9,9 @@ import {
   shopItems,
   pointLogs,
   fines,
+  stations,
+  stationFolders,
+  stationMaterials,
 } from "@/db/schema";
 import { resolveOrderedCost } from "@/app/magazin/shop-item";
 
@@ -291,4 +294,125 @@ export async function getAllFines(limit = 100): Promise<FineEntry[]> {
     .limit(limit);
 
   return rows;
+}
+
+export type StationEntry = {
+  id: string;
+  name: string;
+  description: string | null;
+  materialCount: number;
+  createdAt: Date;
+};
+
+export async function getStations(): Promise<StationEntry[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({
+      id: stations.id,
+      name: stations.name,
+      description: stations.description,
+      createdAt: stations.createdAt,
+      materialCount: sql<number>`count(${stationMaterials.id})`,
+    })
+    .from(stations)
+    .leftJoin(stationMaterials, eq(stationMaterials.stationId, stations.id))
+    .groupBy(stations.id)
+    .orderBy(stations.name);
+
+  return rows.map((row) => ({ ...row, materialCount: Number(row.materialCount) }));
+}
+
+export type StationMaterialEntry = {
+  id: string;
+  fileName: string;
+  fileType: string | null;
+  fileSize: number;
+  uploadedByName: string;
+  createdAt: Date;
+};
+
+const materialColumns = {
+  id: stationMaterials.id,
+  fileName: stationMaterials.fileName,
+  fileType: stationMaterials.fileType,
+  fileSize: stationMaterials.fileSize,
+  createdAt: stationMaterials.createdAt,
+  uploadedByName: users.name,
+};
+
+export type StationFolderEntry = {
+  id: string;
+  name: string;
+  materialCount: number;
+  createdAt: Date;
+};
+
+export type StationOverview = {
+  id: string;
+  name: string;
+  description: string | null;
+  folders: StationFolderEntry[];
+};
+
+// Station root view: its folders (e.g. "Ziua 1"), for the /materiale/[id]
+// page. Materials only live inside folders, never directly under a station.
+export async function getStationOverview(stationId: string): Promise<StationOverview | null> {
+  const db = await getDb();
+  const [station] = await db
+    .select({ id: stations.id, name: stations.name, description: stations.description })
+    .from(stations)
+    .where(eq(stations.id, stationId))
+    .limit(1);
+  if (!station) return null;
+
+  const folders = await db
+    .select({
+      id: stationFolders.id,
+      name: stationFolders.name,
+      createdAt: stationFolders.createdAt,
+      materialCount: sql<number>`count(${stationMaterials.id})`,
+    })
+    .from(stationFolders)
+    .leftJoin(stationMaterials, eq(stationMaterials.folderId, stationFolders.id))
+    .where(eq(stationFolders.stationId, stationId))
+    .groupBy(stationFolders.id)
+    .orderBy(stationFolders.name);
+
+  return {
+    ...station,
+    folders: folders.map((folder) => ({ ...folder, materialCount: Number(folder.materialCount) })),
+  };
+}
+
+export type StationFolderDetail = {
+  id: string;
+  name: string;
+  stationId: string;
+  stationName: string;
+  materials: StationMaterialEntry[];
+};
+
+export async function getFolderDetail(folderId: string): Promise<StationFolderDetail | null> {
+  const db = await getDb();
+  const [folder] = await db
+    .select({
+      id: stationFolders.id,
+      name: stationFolders.name,
+      stationId: stationFolders.stationId,
+      stationName: stations.name,
+    })
+    .from(stationFolders)
+    .innerJoin(stations, eq(stationFolders.stationId, stations.id))
+    .where(eq(stationFolders.id, folderId))
+    .limit(1);
+  if (!folder) return null;
+
+  const materials = await db
+    .select(materialColumns)
+    .from(stationMaterials)
+    .innerJoin(users, eq(stationMaterials.uploadedById, users.id))
+    .where(eq(stationMaterials.folderId, folderId))
+    .orderBy(desc(stationMaterials.createdAt));
+
+  return { ...folder, materials };
 }

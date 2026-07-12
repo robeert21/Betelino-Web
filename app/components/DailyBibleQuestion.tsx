@@ -16,7 +16,7 @@ export function DailyBibleQuestion({
   loggedIn,
   initialResult,
 }: {
-  question: DailyQuestion;
+  question: DailyQuestion | null;
   dateKey: string;
   dayLabel: string;
   loggedIn: boolean;
@@ -67,10 +67,9 @@ export function DailyBibleQuestion({
 
   const answered = phase === "done";
   const timedOut = answered && selected === null;
-  const isCorrect = selected === question.correctIndex;
   const progressPercent = (timeLeft / TIME_LIMIT) * 100;
 
-  if (!loggedIn) {
+  if (!loggedIn || !question) {
     return (
       <div className="rounded-[16px] bg-warm-cream/[0.04] p-7 ring-1 ring-inset ring-warm-cream/10 backdrop-blur-sm md:p-9">
         <div className="flex flex-col items-start gap-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -93,6 +92,8 @@ export function DailyBibleQuestion({
       </div>
     );
   }
+
+  const isCorrect = selected === question.correctIndex;
 
   return (
     <div className="rounded-[16px] bg-warm-cream/[0.04] p-7 ring-1 ring-inset ring-warm-cream/10 backdrop-blur-sm md:p-9">

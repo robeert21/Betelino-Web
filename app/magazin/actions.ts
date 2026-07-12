@@ -95,24 +95,36 @@ export async function submitShopCart(
   }
 
   const db = await getDb();
-  const [request] = await db
-    .insert(shopRequests)
-    .values({ userId: user.id, note: trimmedNote })
-    .returning({ id: shopRequests.id });
+  const requestId = crypto.randomUUID();
 
-  if (validLines.length > 0) {
-    await db.insert(shopRequestItems).values(
-      validLines.map((line) => {
-        const item = itemsById.get(line.itemId)!;
-        return {
-          shopRequestId: request.id,
-          itemId: item.id,
-          itemTitle: item.title,
-          itemFlavor: line.flavor,
-          quantity: line.quantity,
-        };
-      }),
-    );
+  const rows = validLines.map((line) => {
+    const item = itemsById.get(line.itemId)!;
+    return {
+      shopRequestId: requestId,
+      itemId: item.id,
+      itemTitle: item.title,
+      itemFlavor: line.flavor,
+      quantity: line.quantity,
+    };
+  });
+
+  // D1 caps bound parameters at 100 per statement; each row binds 6,
+  // so a single insert holds at most 16 rows before D1 rejects it.
+  // Run the request + all item chunks as one atomic batch so a request
+  // never ends up with only some of its items saved.
+  const CHUNK_SIZE = 16;
+  const itemInserts = [];
+  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    itemInserts.push(db.insert(shopRequestItems).values(rows.slice(i, i + CHUNK_SIZE)));
+  }
+
+  if (itemInserts.length > 0) {
+    await db.batch([
+      db.insert(shopRequests).values({ id: requestId, userId: user.id, note: trimmedNote }),
+      ...(itemInserts as [(typeof itemInserts)[number], ...typeof itemInserts]),
+    ]);
+  } else {
+    await db.insert(shopRequests).values({ id: requestId, userId: user.id, note: trimmedNote });
   }
 
   revalidatePath("/dashboard/solicitari");

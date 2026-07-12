@@ -14,7 +14,9 @@ export function DashboardNav({
 
   const items = [
     { href: "/dashboard", label: "Puncte" },
+    { href: "/dashboard/regulament-punctaj", label: "Regulament punctaj" },
     { href: "/dashboard/amenzi", label: "Amenzi" },
+    { href: "/dashboard/materiale", label: "Materiale" },
     { href: "/dashboard/solicitari", label: "Solicitări" },
     ...(isCalauza || isAdmin ? [{ href: "/dashboard/echipa", label: "Membrii echipei" }] : []),
     ...(isAdmin ? [{ href: "/dashboard/membri", label: "Membri" }] : []),
@@ -23,7 +25,7 @@ export function DashboardNav({
   return (
     <nav className="flex flex-wrap gap-2 md:flex-col md:flex-nowrap md:gap-2">
       {items.map((item) => {
-        const isActive = pathname === item.href;
+        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link
             key={item.href}

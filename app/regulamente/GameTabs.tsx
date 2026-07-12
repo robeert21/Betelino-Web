@@ -3,11 +3,12 @@
 import { useState } from "react";
 import type { GameRule, RuleSection } from "./data";
 
-type TopSection = "regulament" | "jocuri";
+type TopSection = "regulament" | "jocuri" | "magazin";
 
 const TOP_SECTIONS: { slug: TopSection; label: string }[] = [
   { slug: "regulament", label: "Regulamentul Taberei" },
   { slug: "jocuri", label: "Jocuri" },
+  { slug: "magazin", label: "Magazin" },
 ];
 
 function RuleSections({ sections, wide = false }: { sections: RuleSection[]; wide?: boolean }) {
@@ -54,9 +55,11 @@ function GameCard({ game }: { game: GameRule }) {
 export function GameTabs({
   campRules,
   games,
+  shopRules,
 }: {
   campRules: RuleSection[];
   games: GameRule[];
+  shopRules: RuleSection[];
 }) {
   const [activeTop, setActiveTop] = useState<TopSection>("regulament");
 
@@ -91,12 +94,14 @@ export function GameTabs({
       <div key={activeTop} className="animate-fade-in mt-10">
         {activeTop === "regulament" ? (
           <RuleSections sections={campRules} />
-        ) : (
+        ) : activeTop === "jocuri" ? (
           <div className="grid gap-14">
             {games.map((game) => (
               <GameCard key={game.slug} game={game} />
             ))}
           </div>
+        ) : (
+          <RuleSections sections={shopRules} />
         )}
       </div>
     </div>

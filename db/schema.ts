@@ -138,6 +138,65 @@ export const passwordResetTokens = sqliteTable("password_reset_tokens", {
     .$defaultFn(() => new Date()),
 });
 
+// A game/activity station in camp (e.g. a stop on a rally-style team game).
+// Leaders/admins/călăuze upload reference materials (rules, images, props
+// lists) here so anyone running the station can pull them up.
+export const stations = sqliteTable("stations", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdById: text("created_by_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+// A folder within a station (e.g. "Ziua 1", "Ziua 2") for organizing that
+// station's materials. Materials can also live directly under the station
+// with no folder (folderId null on station_materials).
+export const stationFolders = sqliteTable("station_folders", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  stationId: text("station_id")
+    .notNull()
+    .references(() => stations.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdById: text("created_by_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+// A file uploaded to a station, stored in R2 under fileKey. fileType is the
+// browser-reported MIME type, used to pick an icon/preview in the UI.
+// folderId is null when the material sits directly under the station.
+export const stationMaterials = sqliteTable("station_materials", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  stationId: text("station_id")
+    .notNull()
+    .references(() => stations.id, { onDelete: "cascade" }),
+  folderId: text("folder_id").references(() => stationFolders.id, { onDelete: "cascade" }),
+  fileKey: text("file_key").notNull(),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type"),
+  fileSize: integer("file_size").notNull(),
+  uploadedById: text("uploaded_by_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 // One row per user per calendar day (dateKey, e.g. "2026-07-09"). selected
 // is the chosen option index, or null when the 15s timer ran out unanswered.
 // A new dateKey each day naturally resets the game — no cleanup needed.

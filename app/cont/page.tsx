@@ -4,9 +4,8 @@ import path from "path";
 import { getSession } from "@/lib/auth";
 import { getCamperAccount, getCamperPointLogs, getCamperShopOrders, getCamperFines } from "./data";
 import { logoutAction } from "./actions";
-import { CancelOrderButton } from "./CancelOrderButton";
 import { AddEmailForm } from "./AddEmailForm";
-import { formatPrice } from "@/app/magazin/format";
+import { AccountTabs } from "./AccountTabs";
 
 function photoUrl(relativePath: string) {
   try {
@@ -21,14 +20,6 @@ function photoUrl(relativePath: string) {
 
 export const metadata = {
   title: "Contul meu — Betelino",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "În așteptare",
-  APPROVED: "Aprobată",
-  FULFILLED: "Cumpărată",
-  DELIVERED: "Predată",
-  REJECTED: "Respinsă",
 };
 
 const TEAM_GUIDES: Record<
@@ -71,24 +62,14 @@ export default async function ContPage() {
   const pointLogs = await getCamperPointLogs(session.userId);
   const shopOrders = await getCamperShopOrders(session.userId);
   const camperFines = await getCamperFines(session.userId);
-  const unpaidFines = camperFines.filter((fine) => !fine.paidAt);
-  const unpaidFinesCount = unpaidFines.length;
-  const unpaidFinesTotal = unpaidFines.reduce((sum, fine) => sum + fine.amount, 0);
   const guide = TEAM_GUIDES[account.teamName];
-  const hasPrices = shopOrders.some((order) =>
-    order.items.some((item) => item.unitCost > 0),
-  );
-  const shopOrdersTotal = shopOrders.reduce((sum, order) => sum + order.total, 0);
 
-  const rows = [
+  const detailRows = [
     { label: "Nume complet", value: account.fullName },
     ...(account.username
       ? [{ label: "Utilizator", value: account.username }]
       : []),
     ...(account.email ? [{ label: "Email", value: account.email }] : []),
-    { label: "Echipă", value: account.teamName },
-    { label: "Puncte echipă", value: account.teamPoints, numeric: true },
-    { label: "Puncte individuale", value: account.individualPoints, numeric: true },
   ];
 
   return (
@@ -112,250 +93,56 @@ export default async function ContPage() {
         </form>
       </div>
 
-      <p className="animate-fade-in stagger-1 mt-4 max-w-[65ch] leading-relaxed text-ink-umber-soft">
-        Aici vezi echipa ta și punctele adunate până acum în tabără.
-      </p>
+      <div className="animate-fade-in stagger-1 mt-8 flex items-center gap-2.5">
+        <span className="rounded-full bg-sage-trust px-4 py-1.5 text-sm font-semibold text-warm-cream">
+          {account.teamName}
+        </span>
+      </div>
 
-      <dl className="mt-12 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-8">
-        {rows.map((row, index) => (
-          <div
-            key={row.label}
-            className="animate-fade-in flex items-center justify-between gap-6 py-5"
-            style={{ animationDelay: `${0.12 + index * 0.06}s` }}
-          >
-            <dt className="text-sm font-medium text-ink-umber-soft">
-              {row.label}
-            </dt>
-            <dd
-              className={`text-lg font-semibold text-ink-umber ${
-                row.numeric
-                  ? "animate-value-pop tabular-nums"
-                  : ""
-              }`}
-              style={
-                row.numeric
-                  ? { animationDelay: `${0.12 + index * 0.06 + 0.15}s` }
-                  : undefined
-              }
-            >
-              {row.value}
-            </dd>
+      <div className="animate-fade-in stagger-1 mt-6 grid grid-cols-2 gap-2.5">
+        <div className="rounded-[14px] bg-soft-linen px-6 py-6">
+          <p className="text-[0.8125rem] font-medium text-ink-umber-soft">Puncte individuale</p>
+          <p className="animate-value-pop mt-1 tabular-nums text-3xl font-semibold text-ink-umber">
+            {account.individualPoints}
+          </p>
+        </div>
+        <div className="rounded-[14px] bg-soft-linen px-6 py-6">
+          <p className="text-[0.8125rem] font-medium text-ink-umber-soft">Puncte echipă</p>
+          <p className="animate-value-pop mt-1 tabular-nums text-3xl font-semibold text-ink-umber">
+            {account.teamPoints}
+          </p>
+        </div>
+      </div>
+
+      <dl className="animate-fade-in stagger-2 mt-2.5 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-6">
+        {detailRows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between gap-6 py-4">
+            <dt className="text-sm text-ink-umber-soft">{row.label}</dt>
+            <dd className="text-sm font-semibold text-ink-umber">{row.value}</dd>
           </div>
         ))}
       </dl>
 
-      {guide && (
-        <div className="animate-fade-in stagger-2 mt-8 flex items-center justify-between gap-4 rounded-[14px] bg-soft-linen px-8 py-6">
-          <div>
-            <p className="text-[0.8125rem] font-semibold uppercase tracking-[0.04em] text-sage-deep">
-              Călăuza ta
-            </p>
-            <p className="mt-1 text-base font-semibold text-ink-umber">
-              {guide.name}
-            </p>
-            <p className="text-sm text-ink-umber-soft">{guide.phone}</p>
-          </div>
-          <div
-            className="h-20 w-20 shrink-0 rounded-full bg-cover bg-center bg-border-sand"
-            style={{ backgroundImage: `url(${photoUrl(guide.photo)})` }}
-            aria-hidden
-          />
-        </div>
-      )}
-
-      {shopOrders.length > 0 && (
-        <div className="mt-12">
-          <div className="flex items-baseline justify-between gap-4">
-            <h2 className="animate-fade-in font-display text-lg font-medium text-ink-umber">
-              Comenzi magazin
-            </h2>
-            {hasPrices && (
-              <p className="animate-fade-in text-sm font-semibold text-ink-umber-soft">
-                Total: <span className="tabular-nums text-ink-umber">{formatPrice(shopOrdersTotal)}</span>
-              </p>
-            )}
-          </div>
-          {!hasPrices && (
-            <p className="animate-fade-in mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-umber-soft">
-              Prețurile în magazin nu sunt încă stabilite — suma de plată va apărea aici imediat ce vor fi adăugate.
-            </p>
-          )}
-          <div className="mt-6 space-y-4">
-            {shopOrders.map((order, index) => (
-              <div
-                key={order.id}
-                className="animate-fade-in rounded-[14px] bg-soft-linen px-8 py-6"
-                style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.04em] text-sage-deep">
-                    {order.createdAt.toLocaleString("ro-RO", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      order.status === "REJECTED"
-                        ? "bg-signal-red/10 text-signal-red"
-                        : order.status === "DELIVERED"
-                          ? "bg-sage-deep/10 text-sage-deep"
-                          : "bg-border-sand/60 text-ink-umber-soft"
-                    }`}
-                  >
-                    {STATUS_LABELS[order.status] ?? order.status}
-                  </span>
-                </div>
-                <div className="mt-4 divide-y divide-border-sand">
-                  {order.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-6 py-2.5 text-sm"
-                    >
-                      <p className="text-ink-umber">
-                        {item.itemTitle}
-                        {item.itemFlavor ? ` (${item.itemFlavor})` : ""}
-                        <span className="text-ink-umber-soft"> × {item.quantity}</span>
-                      </p>
-                      {hasPrices && (
-                        <p className="tabular-nums font-semibold text-ink-umber">
-                          {formatPrice(item.lineTotal)}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {order.note && (
-                  <p className="mt-3 text-sm italic text-ink-umber-soft">
-                    „{order.note}”
-                  </p>
-                )}
-                {hasPrices && (
-                  <div className="mt-3 flex items-center justify-between border-t border-border-sand pt-3">
-                    <p className="text-sm font-semibold text-ink-umber-soft">De plată</p>
-                    <p className="tabular-nums text-base font-semibold text-ink-umber">
-                      {formatPrice(order.total)}
-                    </p>
-                  </div>
-                )}
-                {order.status === "PENDING" && (
-                  <CancelOrderButton requestId={order.id} />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {camperFines.length > 0 && (
-        <div className="mt-12">
-          <div className="flex items-baseline justify-between gap-4">
-            <h2 className="animate-fade-in font-display text-lg font-medium text-ink-umber">
-              Amenzi
-            </h2>
-            <p className="animate-fade-in text-sm font-semibold text-ink-umber-soft">
-              {camperFines.length} {camperFines.length === 1 ? "amendă" : "amenzi"}
-              {unpaidFinesCount > 0 && (
-                <span className="text-signal-red"> · {unpaidFinesCount} neplătite</span>
-              )}
-            </p>
-          </div>
-          {unpaidFinesTotal > 0 && (
-            <p className="animate-fade-in mt-2 text-sm text-ink-umber-soft">
-              De plată: <span className="font-semibold text-signal-red">{formatPrice(unpaidFinesTotal)}</span>
-            </p>
-          )}
-          <div className="mt-6 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-6 sm:px-8">
-            {camperFines.map((fine, index) => (
-              <div
-                key={fine.id}
-                className="animate-fade-in flex flex-col gap-2 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
-                style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-ink-umber break-words">{fine.reason}</p>
-                  <p className="text-xs text-ink-umber-soft">
-                    {fine.createdAt.toLocaleString("ro-RO", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-3">
-                  <span className="tabular-nums text-sm font-semibold text-ink-umber">
-                    {formatPrice(fine.amount)}
-                  </span>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      fine.paidAt
-                        ? "bg-sage-deep/10 text-sage-deep"
-                        : "bg-signal-red/10 text-signal-red"
-                    }`}
-                  >
-                    {fine.paidAt ? "Plătită" : "Neplătită"}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {!account.email && (
-        <div className="animate-fade-in stagger-2 mt-8 rounded-[14px] bg-soft-linen px-8 py-6">
-          <h2 className="font-display text-lg font-medium text-ink-umber">
-            Contul tău nu are un email
-          </h2>
-          <p className="mt-2 max-w-[65ch] text-sm leading-relaxed text-ink-umber-soft">
-            Adaugă o adresă de email ca să poți reseta parola dacă o uiți.
+        <div className="animate-fade-in stagger-2 mt-2.5 rounded-[14px] bg-soft-linen px-6 py-6">
+          <p className="text-sm font-semibold text-ink-umber">Contul tău nu are un email</p>
+          <p className="mt-1.5 max-w-[65ch] text-sm leading-relaxed text-ink-umber-soft">
+            Adaugă o adresă ca să poți reseta parola dacă o uiți.
           </p>
-          <div className="mt-5">
+          <div className="mt-4">
             <AddEmailForm />
           </div>
         </div>
       )}
 
-      {pointLogs.length > 0 && (
-        <div className="mt-12">
-          <h2 className="animate-fade-in font-display text-lg font-medium text-ink-umber">
-            Istoric puncte individuale
-          </h2>
-          <div className="mt-6 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-8">
-            {pointLogs.map((log, index) => (
-              <div
-                key={log.id}
-                className="animate-fade-in flex items-center justify-between gap-6 py-5"
-                style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
-              >
-                <div>
-                  {log.reason && (
-                    <p className="text-sm font-semibold text-ink-umber">{log.reason}</p>
-                  )}
-                  <p className="text-xs text-ink-umber-soft">
-                    {log.createdAt.toLocaleString("ro-RO", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
-                </div>
-                <p
-                  className={`tabular-nums text-lg font-semibold ${
-                    log.amount < 0 ? "text-signal-red" : "text-sage-deep"
-                  }`}
-                >
-                  {log.amount > 0 ? `+${log.amount}` : log.amount}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <AccountTabs
+        guide={
+          guide ? { name: guide.name, phone: guide.phone, photoUrl: photoUrl(guide.photo) } : null
+        }
+        pointLogs={pointLogs}
+        shopOrders={shopOrders}
+        camperFines={camperFines}
+      />
     </div>
   );
 }

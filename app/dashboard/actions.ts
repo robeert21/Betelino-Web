@@ -3,8 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { and, eq, inArray, or, sql, count } from "drizzle-orm";
 import { z } from "zod";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getDb } from "@/db";
-import { teams, users, shopRequests, pointLogs, fines } from "@/db/schema";
+import {
+  teams,
+  users,
+  shopRequests,
+  pointLogs,
+  fines,
+  stations,
+  stationFolders,
+  stationMaterials,
+} from "@/db/schema";
 import { getCurrentUser, isLeaderRole, isAdminRole } from "@/lib/auth";
 
 const ASSIGNABLE_ROLES = ["CAMPER", "STAFF", "ADMIN", "CALAUZA"] as const;
@@ -393,5 +403,106 @@ export async function deleteMemberAction(userId: string): Promise<{ error?: stri
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/membri");
+  return {};
+}
+
+export type CreateFolderState = {
+  error?: string;
+  success?: boolean;
+};
+
+const createFolderSchema = z.object({
+  name: z.string().trim().min(1, "Numele este obligatoriu.").max(120),
+});
+
+export async function createFolderAction(
+  stationId: string,
+  _prevState: CreateFolderState,
+  formData: FormData,
+): Promise<CreateFolderState> {
+  const user = await getCurrentUser();
+  if (!user || !isLeaderRole(user.role)) {
+    return { error: "Nu ai acces la această acțiune." };
+  }
+
+  const parsed = createFolderSchema.safeParse({ name: formData.get("name") });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
+  }
+
+  const db = await getDb();
+  const [station] = await db.select({ id: stations.id }).from(stations).where(eq(stations.id, stationId)).limit(1);
+  if (!station) {
+    return { error: "Zona nu a fost găsită." };
+  }
+
+  await db.insert(stationFolders).values({ stationId, name: parsed.data.name, createdById: user.id });
+
+  revalidatePath(`/dashboard/materiale/${stationId}`);
+  return { success: true };
+}
+
+export async function deleteFolderAction(folderId: string): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isLeaderRole(currentUser.role)) {
+    return { error: "Nu ai acces la această acțiune." };
+  }
+
+  const db = await getDb();
+  const [folder] = await db
+    .select({ id: stationFolders.id, stationId: stationFolders.stationId })
+    .from(stationFolders)
+    .where(eq(stationFolders.id, folderId))
+    .limit(1);
+  if (!folder) {
+    return { error: "Folderul nu a fost găsit." };
+  }
+
+  const materials = await db
+    .select({ fileKey: stationMaterials.fileKey })
+    .from(stationMaterials)
+    .where(eq(stationMaterials.folderId, folderId));
+
+  if (materials.length > 0) {
+    const { env } = await getCloudflareContext({ async: true });
+    await Promise.all(materials.map((material) => env.MATERIALS.delete(material.fileKey)));
+  }
+
+  await db.delete(stationFolders).where(eq(stationFolders.id, folderId));
+
+  revalidatePath(`/dashboard/materiale/${folder.stationId}`);
+  return {};
+}
+
+export async function deleteMaterialAction(materialId: string): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isLeaderRole(currentUser.role)) {
+    return { error: "Nu ai acces la această acțiune." };
+  }
+
+  const db = await getDb();
+  const [material] = await db
+    .select({
+      id: stationMaterials.id,
+      fileKey: stationMaterials.fileKey,
+      stationId: stationMaterials.stationId,
+      folderId: stationMaterials.folderId,
+    })
+    .from(stationMaterials)
+    .where(eq(stationMaterials.id, materialId))
+    .limit(1);
+  if (!material) {
+    return { error: "Materialul nu a fost găsit." };
+  }
+
+  const { env } = await getCloudflareContext({ async: true });
+  await env.MATERIALS.delete(material.fileKey);
+  await db.delete(stationMaterials).where(eq(stationMaterials.id, materialId));
+
+  revalidatePath(
+    material.folderId
+      ? `/dashboard/materiale/${material.stationId}/${material.folderId}`
+      : `/dashboard/materiale/${material.stationId}`,
+  );
   return {};
 }

@@ -1,11 +1,11 @@
-import { CAMP_RULES, GAMES, SHOP_RULES } from "./data";
-import { GameTabs } from "./GameTabs";
+import { SCHEDULE } from "./data";
+import { ScheduleTabs } from "./ScheduleTabs";
 
 export const metadata = {
-  title: "Regulamente — Betelino",
+  title: "Program — Betelino",
 };
 
-export default function RegulamentePage() {
+export default function ProgramPage() {
   return (
     <div>
       <section className="relative overflow-hidden bg-forest-night">
@@ -20,22 +20,21 @@ export default function RegulamentePage() {
           <div className="animate-fade-in flex items-center gap-2.5">
             <span className="h-[2px] w-7 bg-amber-glow" />
             <span className="text-[0.8125rem] font-bold uppercase tracking-[0.15em] text-amber-glow">
-              Regulamente
+              Program
             </span>
           </div>
           <h1 className="animate-fade-in stagger-1 font-shout mt-5 text-[clamp(2.25rem,5vw,4rem)] leading-[0.95] text-warm-cream">
-            REGULAMENTE
+            PROGRAMUL TABEREI
           </h1>
           <p className="animate-fade-in stagger-2 mt-6 max-w-[65ch] text-lg leading-relaxed text-warm-cream/80">
-            Alege o secțiune de mai jos: regulamentul general al taberei,
-            regulile jocurilor sau cele ale magazinului. Liderii pot adăuga
-            precizări suplimentare înainte de fiecare activitate.
+            Orarul zilnic al taberei BETELINO. Programul poate suferi mici
+            ajustări pe parcurs, anunțate din timp de lideri.
           </p>
         </div>
       </section>
 
       <div className="mx-auto max-w-[1800px] px-6 py-14 md:px-12 md:py-20 xl:px-20 2xl:px-28">
-        <GameTabs campRules={CAMP_RULES} games={GAMES} shopRules={SHOP_RULES} />
+        <ScheduleTabs days={SCHEDULE} />
       </div>
     </div>
   );

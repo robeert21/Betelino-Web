@@ -13,11 +13,50 @@ export type GameRule = {
 
 export const CAMP_RULES: RuleSection[] = [
   {
-    title: "Regulamentul taberei",
-    intro:
-      "Aceasta este o secțiune placeholder. Textul complet al regulamentului taberei va fi adăugat aici.",
+    title: "🏕️ General",
     items: [
-      "Regulile generale ale taberei (program, comportament, siguranță etc.) urmează să fie completate.",
+      "Participanții vor avea acces limitat la telefon, doar în intervalul orar stabilit de lideri.",
+      "Nu se părăsește perimetrul taberei decât cu însoțirea unui lider.",
+      "Nu se rămâne băiat-fată singuri în colțurile taberei.",
+      "Orice problemă medicală, alergie sau medicament de administrat zilnic trebuie declarate liderului de grupă la sosire sau cât mai curând.",
+      "Respectul față de lideri, colegi și bunurile taberei este obligatoriu.",
+      "Conflictele se rezolvă prin discuție cu liderul de grupă, nu prin violență verbală sau fizică.",
+    ],
+  },
+  {
+    title: "🍽️ Masă",
+    items: [
+      "Prezența la toate mesele este obligatorie, la orele stabilite.",
+      "La fiecare masă vor fi repartizați câțiva copii/adolescenți pentru organizarea meselor și strângerea lor.",
+    ],
+  },
+  {
+    title: "🛏️ Cameră",
+    items: [
+      "Stingerea va fi la ora 00:00. După această oră nu mai este voie să ieșim din camere.",
+      "Obiectele de valoare (bani, gadget-uri) sunt aduse pe răspunderea proprie a copilului; organizatorii nu răspund pentru pierderi.",
+      "Igiena personală (duș zilnic, păstrarea curățeniei în cameră) este responsabilitatea fiecărui participant, verificată de liderul de cameră.",
+    ],
+  },
+  {
+    title: "📋 Program",
+    items: [
+      "Farsele sunt interzise! Dacă le face cineva și este prins, va fi sancționat cu amendă de la 20 de lei în sus. La 3 abateri se va lua o măsură mai drastică decât amenda.",
+      "Participarea la programul spiritual (rugăciune, studiu biblic, momente de închinare) este obligatorie pentru toți participanții.",
+      "La părtășie, ținuta trebuie să cuprindă: la băieți — pantaloni lungi; la fete — fustă/rochie și batic.",
+    ],
+  },
+];
+
+export const SHOP_RULES: RuleSection[] = [
+  {
+    title: "Magazin",
+    items: [
+      "Magazinul va fi disponibil după părtășia de seară, în jurul orei 21:00.",
+      "Fiecare copil va primi produsele comandate și nu altele.",
+      "Odată ce comanda este plasată, există opțiunea de a o anula. După anulare, se poate efectua o nouă comandă.",
+      "Pentru alte produse, în afară de cele disponibile în meniu, se poate plăti o taxă de 3 lei, care permite solicitarea aducerii la magazin a unui produs specific, indisponibil în meniul obișnuit. Ne rezervăm dreptul de a refuza anumite produse. De exemplu, băuturile energizante, spuma de ras și alte produse considerate nepotrivite nu vor fi acceptate și nu vor fi aduse la magazin.",
+      "Toate acțiunile privind plasarea sau anularea comenzilor se vor efectua până la ora 16:00. Cazurile de excepție se discută cu liderii.",
     ],
   },
 ];
@@ -40,7 +79,7 @@ export const GAMES: GameRule[] = [
         ],
       },
       {
-        title: "Cum elimini o țintă",
+        title: "Cum elimini o țintă?",
         intro: "Pentru a elimina o țintă trebuie:",
         items: [
           "Să atingi persoana respectivă cu obiectul de pe bilețel.",
@@ -76,11 +115,11 @@ export const GAMES: GameRule[] = [
         ],
       },
       {
-        title: "Cum câștigi",
+        title: "Cum câștigi?",
         intro: "Jocul se încheie atunci când:",
         items: [
-          "Rămâne un singur participant neeliminat; sau",
-          "Lanțul eliminărilor ajunge înapoi la tine, iar noua ta țintă este propriul nume.",
+          "Rămâne un singur participant neeliminat;",
+          "Lanțul eliminărilor ajunge înapoi la tine, iar noua ta țintă este propriul nume;",
           "În oricare dintre situații, acel participant este declarat câștigător.",
         ],
       },

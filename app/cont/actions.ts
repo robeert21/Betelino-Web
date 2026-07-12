@@ -69,12 +69,32 @@ export async function registerAction(
     return { error: "Există deja un cont cu acest email." };
   }
 
-  const username = await generateUniqueUsername(db, name);
   const passwordHash = await hashPassword(password);
-  const [user] = await db
-    .insert(users)
-    .values({ name, email, username, passwordHash })
-    .returning({ id: users.id });
+
+  // generateUniqueUsername checks availability with a SELECT before the
+  // INSERT, so two concurrent registrations can both pass the check for
+  // the same username. Retry on a UNIQUE constraint race instead of
+  // letting it surface as a 500.
+  const MAX_ATTEMPTS = 5;
+  let user: { id: string } | undefined;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const username = await generateUniqueUsername(db, name);
+    try {
+      [user] = await db
+        .insert(users)
+        .values({ name, email, username, passwordHash })
+        .returning({ id: users.id });
+      break;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!message.includes("UNIQUE constraint failed")) throw err;
+      if (message.includes("users.email")) {
+        return { error: "Există deja un cont cu acest email." };
+      }
+      if (attempt === MAX_ATTEMPTS - 1) throw err;
+    }
+  }
+  if (!user) throw new Error("Nu s-a putut crea contul.");
 
   await createSession(user.id);
   redirect("/cont");

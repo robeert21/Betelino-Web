@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { DailyBibleQuestion } from "./components/DailyBibleQuestion";
-import { DAILY_QUESTIONS, dayIndexFromDateKey } from "./daily-question-data";
+import { DAILY_QUESTIONS, questionIndexFor } from "./daily-question-data";
 import { getUserAnswerForDate } from "./daily-question-db";
 
 const DESTINATIONS = [
@@ -29,11 +29,10 @@ const DESTINATIONS = [
   },
 ];
 
-function getDailyQuestion() {
+function getDailyQuestion(userId: string | null) {
   const now = new Date();
   const dateKey = now.toISOString().slice(0, 10);
-  const dayOfYear = dayIndexFromDateKey(dateKey);
-  const question = DAILY_QUESTIONS[dayOfYear % DAILY_QUESTIONS.length];
+  const question = userId ? DAILY_QUESTIONS[questionIndexFor(dateKey, userId)] : null;
   const dayLabel = now.toLocaleDateString("ro-RO", {
     day: "numeric",
     month: "long",
@@ -43,8 +42,8 @@ function getDailyQuestion() {
 }
 
 export default async function Home() {
-  const { question, dateKey, dayLabel } = getDailyQuestion();
   const user = await getCurrentUser();
+  const { question, dateKey, dayLabel } = getDailyQuestion(user?.id ?? null);
   const savedAnswer = user ? await getUserAnswerForDate(user.id, dateKey) : null;
 
   return (

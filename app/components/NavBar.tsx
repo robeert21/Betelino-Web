@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 const BASE_ROUTES = [
   { href: "/", label: "Acasă", icon: HomeIcon },
   { href: "/clasament", label: "Clasament", icon: TrophyIcon },
+  { href: "/program", label: "Program", icon: CalendarIcon },
   { href: "/regulamente", label: "Regulamente", icon: BookIcon },
   { href: "/magazin", label: "Magazin", icon: BagIcon },
   { href: "/cont", label: "Contul meu", icon: UserIcon },
@@ -119,6 +120,22 @@ function TrophyIcon({ active }: { active: boolean }) {
       <path d="M12 14v3" />
       <path d="M8.5 20.5h7" />
       <path d="M9.5 17.5h5l.6 3h-6.2Z" />
+    </svg>
+  );
+}
+
+function CalendarIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
+      <path d="M4 9.5h16" />
+      <path d="M8 3.5v3" />
+      <path d="M16 3.5v3" />
+      <path d="M8 13h.01" />
+      <path d="M12 13h.01" />
+      <path d="M16 13h.01" />
+      <path d="M8 16.5h.01" />
+      <path d="M12 16.5h.01" />
     </svg>
   );
 }

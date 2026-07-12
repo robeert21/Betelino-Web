@@ -17,3 +17,7 @@ database_name = "betelino-db"
 database_id = "12909816-6996-4911-bfaf-793f1f9ce01f"
 migrations_dir = "drizzle/migrations"
 remote = true
+
+[[r2_buckets]]
+binding = "MATERIALS"
+bucket_name = "betelino-materials"
