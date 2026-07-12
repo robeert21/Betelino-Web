@@ -82,7 +82,7 @@ export default async function Home() {
               </Link>
               <Link
                 href="/regulamente"
-                className="rounded-full border border-forest-mist px-8 py-4 text-base font-semibold text-warm-cream/90 transition-[border-color,color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-amber-glow hover:text-warm-cream active:scale-[0.98]"
+                className="rounded-full border border-warm-cream/30 px-8 py-4 text-base font-semibold text-warm-cream/90 transition-[border-color,color,transform] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-amber-glow hover:text-warm-cream active:scale-[0.98]"
               >
                 Citește regulamentele
               </Link>

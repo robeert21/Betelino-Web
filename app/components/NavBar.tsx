@@ -5,15 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const BASE_ROUTES = [
-  { href: "/", label: "Acasă", icon: HomeIcon },
-  { href: "/clasament", label: "Clasament", icon: TrophyIcon },
-  { href: "/program", label: "Program", icon: CalendarIcon },
-  { href: "/regulamente", label: "Regulamente", icon: BookIcon },
-  { href: "/magazin", label: "Magazin", icon: BagIcon },
-  { href: "/cont", label: "Contul meu", icon: UserIcon },
+  { href: "/", label: "Acasă", shortLabel: "Acasă", icon: HomeIcon },
+  { href: "/clasament", label: "Clasament", shortLabel: "Clasament", icon: TrophyIcon },
+  { href: "/program", label: "Program", shortLabel: "Program", icon: CalendarIcon },
+  { href: "/regulamente", label: "Regulamente", shortLabel: "Reguli", icon: BookIcon },
+  { href: "/magazin", label: "Magazin", shortLabel: "Magazin", icon: BagIcon },
+  { href: "/cont", label: "Contul meu", shortLabel: "Cont", icon: UserIcon },
 ];
 
-const DASHBOARD_ROUTE = { href: "/dashboard", label: "Dashboard", icon: TeamIcon };
+const DASHBOARD_ROUTE = {
+  href: "/dashboard",
+  label: "Dashboard",
+  shortLabel: "Lider",
+  icon: TeamIcon,
+};
 
 export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
   const pathname = usePathname();
@@ -88,12 +93,12 @@ export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
             <Link
               key={route.href}
               href={route.href}
-              className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 text-[0.6875rem] font-semibold transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-95 ${
-                isActive ? "text-sage-deep" : "text-ink-umber-soft"
-              }`}
+              className={`flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap px-0.5 text-[0.6875rem] font-semibold transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-95 ${
+                ROUTES.length > 6 ? "text-[0.625rem]" : ""
+              } ${isActive ? "text-sage-deep" : "text-ink-umber-soft"}`}
             >
               <Icon active={isActive} />
-              {route.label}
+              {route.shortLabel}
             </Link>
           );
         })}
