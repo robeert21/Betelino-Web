@@ -24,10 +24,12 @@ export function MembersTable({
   members,
   teams,
   currentUserId,
+  isAdmin,
 }: {
   members: MemberEntry[];
   teams: TeamWithPoints[];
   currentUserId: string;
+  isAdmin: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
@@ -116,6 +118,7 @@ export function MembersTable({
                     member={member}
                     teams={teams}
                     isSelf={member.id === currentUserId}
+                    isAdmin={isAdmin}
                     onRemoved={handleRemoved}
                   />
                 ))}
@@ -131,6 +134,7 @@ export function MembersTable({
                 member={member}
                 teams={teams}
                 isSelf={member.id === currentUserId}
+                isAdmin={isAdmin}
                 onRemoved={handleRemoved}
               />
             ))}
@@ -254,11 +258,13 @@ function MemberRow({
   member,
   teams,
   isSelf,
+  isAdmin,
   onRemoved,
 }: {
   member: MemberEntry;
   teams: TeamWithPoints[];
   isSelf: boolean;
+  isAdmin: boolean;
   onRemoved: (id: string) => void;
 }) {
   const c = useMemberControls(member, onRemoved);
@@ -272,35 +278,45 @@ function MemberRow({
         )}
       </td>
       <td className="px-4 py-5">
-        <select
-          value={c.role}
-          disabled={c.isPending || isSelf}
-          onChange={(event) => c.handleRoleChange(event.target.value)}
-          className={selectClassName}
-        >
-          {ROLE_OPTIONS.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        {isAdmin ? (
+          <select
+            value={c.role}
+            disabled={c.isPending || isSelf}
+            onChange={(event) => c.handleRoleChange(event.target.value)}
+            className={selectClassName}
+          >
+            {ROLE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <p className="text-ink-umber">{ROLE_LABELS[member.role] ?? member.role}</p>
+        )}
         {c.roleError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{c.roleError}</p>}
       </td>
       <td className="px-4 py-5 tabular-nums text-ink-umber">{member.points}</td>
       <td className="px-4 py-5">
-        <select
-          value={c.teamId}
-          disabled={c.isPending}
-          onChange={(event) => c.handleTeamChange(event.target.value)}
-          className={selectClassName}
-        >
-          <option value="">Neatribuit</option>
-          {teams.map((team) => (
-            <option key={team.id} value={team.id}>
-              {team.name}
-            </option>
-          ))}
-        </select>
+        {isAdmin ? (
+          <select
+            value={c.teamId}
+            disabled={c.isPending}
+            onChange={(event) => c.handleTeamChange(event.target.value)}
+            className={selectClassName}
+          >
+            <option value="">Neatribuit</option>
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <p className="text-ink-umber">
+            {teams.find((team) => team.id === c.teamId)?.name ?? "Neatribuit"}
+          </p>
+        )}
         {c.teamError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{c.teamError}</p>}
       </td>
       <td className="px-4 py-5">
@@ -320,7 +336,7 @@ function MemberRow({
         {c.cabinError && <p className="mt-2 max-w-[180px] text-xs text-signal-red">{c.cabinError}</p>}
       </td>
       <td className="px-4 py-5 text-right">
-        {!isSelf && (
+        {isAdmin && !isSelf && (
           <div className="flex flex-col items-end gap-2">
             {c.confirmingDelete && (
               <button
@@ -358,11 +374,13 @@ function MemberCard({
   member,
   teams,
   isSelf,
+  isAdmin,
   onRemoved,
 }: {
   member: MemberEntry;
   teams: TeamWithPoints[];
   isSelf: boolean;
+  isAdmin: boolean;
   onRemoved: (id: string) => void;
 }) {
   const c = useMemberControls(member, onRemoved);
@@ -384,32 +402,44 @@ function MemberCard({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2.5">
-        <select
-          value={c.role}
-          disabled={c.isPending || isSelf}
-          onChange={(event) => c.handleRoleChange(event.target.value)}
-          className={compactSelectClassName}
-        >
-          {ROLE_OPTIONS.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        {isAdmin ? (
+          <select
+            value={c.role}
+            disabled={c.isPending || isSelf}
+            onChange={(event) => c.handleRoleChange(event.target.value)}
+            className={compactSelectClassName}
+          >
+            {ROLE_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="rounded-[8px] bg-warm-cream px-3.5 py-2 text-xs text-ink-umber-soft">
+            {ROLE_LABELS[member.role] ?? member.role}
+          </span>
+        )}
 
-        <select
-          value={c.teamId}
-          disabled={c.isPending}
-          onChange={(event) => c.handleTeamChange(event.target.value)}
-          className={compactSelectClassName}
-        >
-          <option value="">Neatribuit</option>
-          {teams.map((team) => (
-            <option key={team.id} value={team.id}>
-              {team.name}
-            </option>
-          ))}
-        </select>
+        {isAdmin ? (
+          <select
+            value={c.teamId}
+            disabled={c.isPending}
+            onChange={(event) => c.handleTeamChange(event.target.value)}
+            className={compactSelectClassName}
+          >
+            <option value="">Neatribuit</option>
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="rounded-[8px] bg-warm-cream px-3.5 py-2 text-xs text-ink-umber-soft">
+            {teams.find((team) => team.id === c.teamId)?.name ?? "Neatribuit"}
+          </span>
+        )}
 
         <select
           value={c.cabin}
@@ -425,7 +455,7 @@ function MemberCard({
           ))}
         </select>
 
-        {!isSelf && (
+        {isAdmin && !isSelf && (
           <div className="ml-auto flex shrink-0 items-center gap-3">
             {c.confirmingDelete && (
               <button

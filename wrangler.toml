@@ -21,3 +21,7 @@ remote = true
 [[r2_buckets]]
 binding = "MATERIALS"
 bucket_name = "betelino-materials"
+
+[observability.logs]
+enabled = false
+invocation_logs = true

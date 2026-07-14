@@ -357,8 +357,8 @@ export async function assignCabinAction(
   cabin: number | null,
 ): Promise<{ error?: string }> {
   const currentUser = await getCurrentUser();
-  if (!currentUser || !isAdminRole(currentUser.role)) {
-    return { error: "Doar administratorii pot asigna cabane." };
+  if (!currentUser || !isLeaderRole(currentUser.role)) {
+    return { error: "Nu ai acces la această acțiune." };
   }
 
   if (cabin !== null && (!Number.isInteger(cabin) || cabin < 1 || cabin > CABIN_COUNT)) {

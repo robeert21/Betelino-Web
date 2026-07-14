@@ -1,8 +1,15 @@
 import { redirect } from "next/navigation";
 import { statSync } from "fs";
 import path from "path";
-import { getSession } from "@/lib/auth";
-import { getCamperAccount, getCamperPointLogs, getCamperShopOrders, getCamperFines } from "./data";
+import { getSession, isLeaderRole } from "@/lib/auth";
+import {
+  getCamperAccount,
+  getCamperPointLogs,
+  getCamperShopOrders,
+  getCamperFines,
+  getCabinRoster,
+  getCabinLeaderName,
+} from "./data";
 import { logoutAction } from "./actions";
 import { AddEmailForm } from "./AddEmailForm";
 import { AccountTabs } from "./AccountTabs";
@@ -63,6 +70,16 @@ export default async function ContPage() {
   const shopOrders = await getCamperShopOrders(session.userId);
   const camperFines = await getCamperFines(session.userId);
   const guide = TEAM_GUIDES[account.teamName];
+
+  const cabinRoster =
+    isLeaderRole(account.role) && account.cabin != null
+      ? { cabin: account.cabin, members: await getCabinRoster(account.cabin) }
+      : null;
+
+  const cabinLeaderName =
+    !isLeaderRole(account.role) && account.cabin != null
+      ? await getCabinLeaderName(account.cabin)
+      : null;
 
   const detailRows = [
     { label: "Nume complet", value: account.fullName },
@@ -142,6 +159,8 @@ export default async function ContPage() {
         pointLogs={pointLogs}
         shopOrders={shopOrders}
         camperFines={camperFines}
+        cabinRoster={cabinRoster}
+        cabinLeaderName={cabinLeaderName}
       />
     </div>
   );

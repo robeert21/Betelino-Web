@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type {
+  CabinRosterEntry,
   CamperFineEntry,
   CamperShopOrder,
   IndividualPointLogEntry,
@@ -10,8 +11,9 @@ import { CancelOrderButton } from "./CancelOrderButton";
 import { formatPrice } from "@/app/magazin/format";
 
 type Guide = { name: string; phone: string; photoUrl: string } | null;
+type CabinRoster = { cabin: number; members: CabinRosterEntry[] } | null;
 
-type TabSlug = "prezentare" | "magazin" | "amenzi";
+type TabSlug = "prezentare" | "magazin" | "amenzi" | "copii";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "În așteptare",
@@ -27,6 +29,7 @@ function formatDate(date: Date) {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/Bucharest",
   });
 }
 
@@ -43,11 +46,15 @@ export function AccountTabs({
   pointLogs,
   shopOrders,
   camperFines,
+  cabinRoster,
+  cabinLeaderName,
 }: {
   guide: Guide;
   pointLogs: IndividualPointLogEntry[];
   shopOrders: CamperShopOrder[];
   camperFines: CamperFineEntry[];
+  cabinRoster: CabinRoster;
+  cabinLeaderName: string | null;
 }) {
   const [activeTab, setActiveTab] = useState<TabSlug>("prezentare");
 
@@ -72,11 +79,24 @@ export function AccountTabs({
       hint: camperFines.length > 0 ? String(camperFines.length) : undefined,
       alert: unpaidFinesCount > 0,
     },
+    ...(cabinRoster
+      ? [
+          {
+            slug: "copii" as TabSlug,
+            label: "Copii",
+            hint: String(cabinRoster.members.length),
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="mt-12">
-      <div role="tablist" aria-label="Secțiuni cont" className="grid grid-cols-3 gap-2">
+      <div
+        role="tablist"
+        aria-label="Secțiuni cont"
+        className={`grid gap-2 ${cabinRoster ? "grid-cols-4" : "grid-cols-3"}`}
+      >
         {tabs.map((tab) => {
           const isActive = tab.slug === activeTab;
           return (
@@ -114,6 +134,14 @@ export function AccountTabs({
       <div key={activeTab} className="animate-fade-in mt-8">
         {activeTab === "prezentare" && (
           <div>
+            {cabinLeaderName && (
+              <div className={`rounded-[14px] bg-soft-linen px-8 py-6 ${guide ? "mb-2.5" : ""}`}>
+                <p className="text-[0.8125rem] font-semibold uppercase tracking-[0.04em] text-sage-deep">
+                  Liderul cabanei tale
+                </p>
+                <p className="mt-1 text-base font-semibold text-ink-umber">{cabinLeaderName}</p>
+              </div>
+            )}
             {guide && (
               <div className="flex items-center justify-between gap-4 rounded-[14px] bg-soft-linen px-8 py-6">
                 <div>
@@ -296,6 +324,25 @@ export function AccountTabs({
               </>
             ) : (
               <EmptyState>Nicio amendă înregistrată. Așa te vrem!</EmptyState>
+            )}
+          </div>
+        )}
+
+        {activeTab === "copii" && cabinRoster && (
+          <div>
+            <p className="text-sm font-semibold text-ink-umber-soft">
+              Cabana {cabinRoster.cabin}
+            </p>
+            {cabinRoster.members.length > 0 ? (
+              <ul className="mt-6 divide-y divide-border-sand rounded-[14px] bg-soft-linen px-8">
+                {cabinRoster.members.map((member) => (
+                  <li key={member.id} className="py-4 text-sm font-semibold text-ink-umber">
+                    {member.name}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState>Niciun copil nu este încă atribuit acestei cabane.</EmptyState>
             )}
           </div>
         )}

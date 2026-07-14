@@ -10,6 +10,8 @@ export type CamperAccount = {
   teamName: string;
   individualPoints: number;
   teamPoints: number;
+  role: string;
+  cabin: number | null;
 };
 
 export async function getCamperAccount(
@@ -24,6 +26,8 @@ export async function getCamperAccount(
       points: users.points,
       teamName: teams.name,
       teamPoints: teams.currentPoints,
+      role: users.role,
+      cabin: users.cabin,
     })
     .from(users)
     .leftJoin(teams, eq(users.teamId, teams.id))
@@ -39,7 +43,40 @@ export async function getCamperAccount(
     teamName: row.teamName ?? "Neatribuită încă",
     individualPoints: row.points,
     teamPoints: row.teamPoints ?? 0,
+    role: row.role,
+    cabin: row.cabin,
   };
+}
+
+// The leader (STAFF/CALAUZA/ADMIN) assigned to a given cabin, for showing a
+// camper who their cabin leader is on their own account page.
+export async function getCabinLeaderName(cabin: number): Promise<string | null> {
+  const db = await getDb();
+  const [row] = await db
+    .select({ name: users.name })
+    .from(users)
+    .where(and(eq(users.cabin, cabin), inArray(users.role, ["STAFF", "ADMIN", "CALAUZA"])))
+    .limit(1);
+
+  return row?.name ?? null;
+}
+
+export type CabinRosterEntry = {
+  id: string;
+  name: string;
+};
+
+// The kids (role CAMPER) sharing a leader's cabin, for the "Copii" section
+// of a leader's own account page.
+export async function getCabinRoster(cabin: number): Promise<CabinRosterEntry[]> {
+  const db = await getDb();
+  const rows = await db
+    .select({ id: users.id, name: users.name })
+    .from(users)
+    .where(and(eq(users.cabin, cabin), eq(users.role, "CAMPER")))
+    .orderBy(users.name);
+
+  return rows;
 }
 
 export type IndividualPointLogEntry = {

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser, isAdminRole } from "@/lib/auth";
+import { getCurrentUser, isAdminRole, isLeaderRole } from "@/lib/auth";
 import { getAllMembers, getTeamsWithPoints } from "../data";
 import { MembersTable } from "../MembersTable";
 
@@ -9,7 +9,7 @@ export const metadata = {
 
 export default async function DashboardMembersPage() {
   const user = await getCurrentUser();
-  if (!user || !isAdminRole(user.role)) {
+  if (!user || !isLeaderRole(user.role)) {
     redirect("/dashboard");
   }
 
@@ -28,7 +28,12 @@ export default async function DashboardMembersPage() {
         automat.
       </p>
       <div className="animate-fade-in stagger-2 mt-10">
-        <MembersTable members={members} teams={teams} currentUserId={user.id} />
+        <MembersTable
+          members={members}
+          teams={teams}
+          currentUserId={user.id}
+          isAdmin={isAdminRole(user.role)}
+        />
       </div>
     </div>
   );
