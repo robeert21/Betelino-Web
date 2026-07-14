@@ -145,6 +145,7 @@ export default async function DashboardPointsPage() {
                     month: "2-digit",
                     hour: "2-digit",
                     minute: "2-digit",
+                    timeZone: "Europe/Bucharest",
                   })}
                 </p>
               </div>
