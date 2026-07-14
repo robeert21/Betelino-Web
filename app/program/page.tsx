@@ -33,7 +33,7 @@ export default function ProgramPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-[1800px] px-6 py-14 md:px-12 md:py-20 xl:px-20 2xl:px-28">
+      <div className="mx-auto max-w-[1800px] px-6 pb-14 pt-11 md:px-12 md:pb-20 md:pt-14 xl:px-20 2xl:px-28">
         <ScheduleTabs days={SCHEDULE} />
       </div>
     </div>

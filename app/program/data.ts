@@ -15,6 +15,40 @@ export type ScheduleDay = {
 
 export const SCHEDULE: ScheduleDay[] = [
   {
+    slug: "ziua-2",
+    label: "Ziua 2",
+    date: "Marți, 14.07.2026",
+    dateISO: "2026-07-14",
+    items: [
+      { time: "08:30", activity: "Deșteptarea!" },
+      { time: "08:40 – 09:00", activity: "Înviorarea de dimineață", location: "Teren sport" },
+      { time: "09:00 – 09:30", activity: "Curățenie și îngrijire personală" },
+      { time: "09:30 – 10:30", activity: "Micul dejun", location: "Sala de mese" },
+      { time: "10:30 – 11:00", activity: "Timp liber" },
+      { time: "11:00 – 13:30", activity: "Lecția nr. 1", location: "Sala de mese" },
+      { time: "13:30 – 14:30", activity: "Prânzul", location: "Sala de mese" },
+      { time: "14:30 – 16:00", activity: "Timp liber, odihnă sau campionat fotbal" },
+      { time: "16:00 – 16:30", activity: "Gustare" },
+      { time: "16:30 – 19:00", activity: "Lecția nr. 2", location: "Sala de mese" },
+      { time: "19:00 – 20:00", activity: "Cina", location: "Sala de mese" },
+      { time: "20:00 – 21:00", activity: "Părtășie", location: "Sala de mese" },
+      {
+        time: "21:00 – 22:00",
+        activity: "Magazin, jocuri de interior și exterior, socializare",
+      },
+      {
+        time: "22:00 – 00:00",
+        activity: "Semifinala Franța - Spania",
+        location: "Sala de mese",
+        optional: true,
+      },
+      {
+        time: "00:00 – 02:00",
+        activity: "Stingerea (discuții în cameră, jocuri, igienă, odihnă)",
+      },
+    ],
+  },
+  {
     slug: "ziua-1",
     label: "Ziua 1",
     date: "Luni, 13.07.2026",
