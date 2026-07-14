@@ -31,8 +31,8 @@ export const SCHEDULE: ScheduleDay[] = [
       { time: "14:30 – 16:00", activity: "Timp liber, odihnă sau campionat fotbal" },
       { time: "16:00 – 16:30", activity: "Gustare" },
       { time: "16:30 – 19:00", activity: "Lecția nr. 2", location: "Sala de mese" },
-      { time: "19:00 – 20:00", activity: "Cina", location: "Sala de mese" },
-      { time: "20:00 – 21:00", activity: "Părtășie", location: "Sala de mese" },
+      { time: "19:30 – 20:30", activity: "Cina", location: "Sala de mese" },
+      { time: "20:30 – 21:00", activity: "Timp liber" },
       {
         time: "21:00 – 22:00",
         activity: "Magazin, jocuri de interior și exterior, socializare",
