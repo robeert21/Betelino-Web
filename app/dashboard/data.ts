@@ -238,7 +238,7 @@ export type PointLogEntry = {
   createdAt: Date;
 };
 
-export async function getRecentPointLogs(limit = 30): Promise<PointLogEntry[]> {
+export async function getRecentPointLogs(limit = 500): Promise<PointLogEntry[]> {
   const db = await getDb();
   const createdByUsers = alias(users, "created_by_users");
   const memberUsers = alias(users, "member_users");
