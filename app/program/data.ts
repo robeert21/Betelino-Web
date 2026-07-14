@@ -23,7 +23,8 @@ export const SCHEDULE: ScheduleDay[] = [
       { time: "08:30", activity: "Deșteptarea!" },
       { time: "08:40 – 09:00", activity: "Înviorarea de dimineață", location: "Teren sport" },
       { time: "09:00 – 09:30", activity: "Curățenie și îngrijire personală" },
-      { time: "09:30 – 10:30", activity: "Micul dejun", location: "Sala de mese" },
+      { time: "09:30 – 10:15", activity: "Micul dejun", location: "Sala de mese" },
+      { time: "10:15 – 10:30", activity: "Părtășie pe cabane" },
       { time: "10:30 – 11:00", activity: "Timp liber" },
       { time: "11:00 – 13:30", activity: "Lecția nr. 1", location: "Sala de mese" },
       { time: "13:30 – 14:30", activity: "Prânzul", location: "Sala de mese" },
@@ -37,7 +38,7 @@ export const SCHEDULE: ScheduleDay[] = [
         activity: "Magazin, jocuri de interior și exterior, socializare",
       },
       {
-        time: "22:00 – 00:00",
+        time: "22:00 – 00:30",
         activity: "Semifinala Franța - Spania",
         location: "Sala de mese",
         optional: true,
