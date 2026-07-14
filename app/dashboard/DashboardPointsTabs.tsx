@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import type { TeamWithPoints, TeamMemberBreakdown, PointLogEntry } from "./data";
+import { CancelPointsSection } from "./CancelPointsSection";
 
-type TabSlug = "echipe" | "individual" | "istoric";
+type TabSlug = "echipe" | "individual" | "istoric" | "anuleaza";
 
 function EmptyState({ children }: { children: React.ReactNode }) {
   return (
@@ -17,12 +18,33 @@ export function DashboardPointsTabs({
   teams,
   memberBreakdown,
   logs,
+  isAdmin,
+  currentUserName,
 }: {
   teams: TeamWithPoints[];
   memberBreakdown: TeamMemberBreakdown[];
   logs: PointLogEntry[];
+  isAdmin: boolean;
+  currentUserName: string;
 }) {
   const [activeTab, setActiveTab] = useState<TabSlug>("echipe");
+  const [liveLogs, setLiveLogs] = useState(logs);
+
+  const activeLogCount = liveLogs.filter((log) => !log.canceledAt).length;
+
+  function handleCanceled(logId: string) {
+    setLiveLogs((current) =>
+      current.map((log) =>
+        log.id === logId ? { ...log, canceledAt: new Date(), canceledByName: currentUserName } : log,
+      ),
+    );
+  }
+
+  function handleEdited(logId: string, amount: number, reason: string | null) {
+    setLiveLogs((current) =>
+      current.map((log) => (log.id === logId ? { ...log, amount, reason } : log)),
+    );
+  }
 
   const tabs: { slug: TabSlug; label: string; hint?: string }[] = [
     { slug: "echipe", label: "Echipe", hint: teams.length > 0 ? String(teams.length) : undefined },
@@ -34,12 +56,25 @@ export function DashboardPointsTabs({
           ? String(memberBreakdown.reduce((sum, team) => sum + team.members.length, 0))
           : undefined,
     },
-    { slug: "istoric", label: "Istoric", hint: logs.length > 0 ? String(logs.length) : undefined },
+    { slug: "istoric", label: "Istoric", hint: liveLogs.length > 0 ? String(liveLogs.length) : undefined },
+    ...(isAdmin
+      ? [
+          {
+            slug: "anuleaza" as TabSlug,
+            label: "Anulează puncte",
+            hint: activeLogCount > 0 ? String(activeLogCount) : undefined,
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="mt-20">
-      <div role="tablist" aria-label="Secțiuni punctaj" className="grid grid-cols-3 gap-2">
+      <div
+        role="tablist"
+        aria-label="Secțiuni punctaj"
+        className={`grid gap-2 ${isAdmin ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}
+      >
         {tabs.map((tab) => {
           const isActive = tab.slug === activeTab;
           return (
@@ -143,18 +178,24 @@ export function DashboardPointsTabs({
 
         {activeTab === "istoric" && (
           <div>
-            {logs.length === 0 ? (
+            {liveLogs.length === 0 ? (
               <EmptyState>Nicio modificare înregistrată încă.</EmptyState>
             ) : (
               <div className="divide-y divide-border-sand rounded-[16px] bg-soft-linen px-7">
-                {logs.map((log, index) => (
+                {liveLogs.map((log, index) => (
                   <div
                     key={log.id}
-                    className="animate-fade-in flex items-center justify-between gap-6 py-5"
+                    className={`animate-fade-in flex items-center justify-between gap-6 py-5 ${
+                      log.canceledAt ? "opacity-50" : ""
+                    }`}
                     style={{ animationDelay: `${Math.min(index, 6) * 0.04}s` }}
                   >
                     <div>
-                      <p className="text-sm font-semibold text-ink-umber">
+                      <p
+                        className={`text-sm font-semibold text-ink-umber ${
+                          log.canceledAt ? "line-through decoration-2" : ""
+                        }`}
+                      >
                         {log.memberName ? `${log.memberName} (${log.teamName})` : log.teamName}
                         {log.reason ? ` — ${log.reason}` : ""}
                       </p>
@@ -167,11 +208,17 @@ export function DashboardPointsTabs({
                           minute: "2-digit",
                           timeZone: "Europe/Bucharest",
                         })}
+                        {log.canceledAt && (
+                          <span className="text-signal-red">
+                            {" "}
+                            · Anulat de {log.canceledByName ?? "un administrator"}
+                          </span>
+                        )}
                       </p>
                     </div>
                     <p
                       className={`tabular-nums text-lg font-semibold ${
-                        log.amount < 0 ? "text-signal-red" : "text-sage-deep"
+                        log.canceledAt ? "line-through decoration-2 text-ink-umber-soft" : log.amount < 0 ? "text-signal-red" : "text-sage-deep"
                       }`}
                     >
                       {log.amount > 0 ? `+${log.amount}` : log.amount}
@@ -181,6 +228,10 @@ export function DashboardPointsTabs({
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === "anuleaza" && isAdmin && (
+          <CancelPointsSection logs={liveLogs} onCanceled={handleCanceled} onEdited={handleEdited} />
         )}
       </div>
     </div>

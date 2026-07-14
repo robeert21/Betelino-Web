@@ -46,7 +46,13 @@ export default async function DashboardPointsPage() {
         <AddPointsForm teams={teams} members={members} />
       </div>
 
-      <DashboardPointsTabs teams={teams} memberBreakdown={memberBreakdown} logs={logs} />
+      <DashboardPointsTabs
+        teams={teams}
+        memberBreakdown={memberBreakdown}
+        logs={logs}
+        isAdmin={isAdmin}
+        currentUserName={currentUser?.name ?? "un administrator"}
+      />
     </div>
   );
 }

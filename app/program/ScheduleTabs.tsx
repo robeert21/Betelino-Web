@@ -80,7 +80,7 @@ function ScheduleTimeline({ day, now }: { day: ScheduleDay; now: Date | null }) 
               <span className="absolute left-0 top-1.5 flex h-2 w-2 items-center justify-center">
                 {isCurrent ? (
                   <>
-                    <span className="absolute inline-flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full bg-sage-trust/50" />
+                    <span className="absolute left-1/2 top-1/2 inline-flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full bg-sage-trust/50" />
                     <span className="relative h-2 w-2 rounded-full bg-sage-trust" />
                   </>
                 ) : (

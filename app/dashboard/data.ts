@@ -236,12 +236,15 @@ export type PointLogEntry = {
   reason: string | null;
   createdByName: string;
   createdAt: Date;
+  canceledAt: Date | null;
+  canceledByName: string | null;
 };
 
 export async function getRecentPointLogs(limit = 500): Promise<PointLogEntry[]> {
   const db = await getDb();
   const createdByUsers = alias(users, "created_by_users");
   const memberUsers = alias(users, "member_users");
+  const canceledByUsers = alias(users, "canceled_by_users");
 
   const rows = await db
     .select({
@@ -252,15 +255,23 @@ export async function getRecentPointLogs(limit = 500): Promise<PointLogEntry[]> 
       teamName: teams.name,
       createdByName: createdByUsers.name,
       memberName: memberUsers.name,
+      canceledAt: pointLogs.canceledAt,
+      canceledByName: canceledByUsers.name,
     })
     .from(pointLogs)
     .innerJoin(teams, eq(pointLogs.teamId, teams.id))
     .innerJoin(createdByUsers, eq(pointLogs.createdById, createdByUsers.id))
     .leftJoin(memberUsers, eq(pointLogs.userId, memberUsers.id))
+    .leftJoin(canceledByUsers, eq(pointLogs.canceledById, canceledByUsers.id))
     .orderBy(desc(pointLogs.createdAt))
     .limit(limit);
 
-  return rows.map((row) => ({ ...row, memberName: row.memberName ?? null }));
+  return rows.map((row) => ({
+    ...row,
+    memberName: row.memberName ?? null,
+    canceledAt: row.canceledAt ?? null,
+    canceledByName: row.canceledByName ?? null,
+  }));
 }
 
 export type FineEntry = {

@@ -100,6 +100,12 @@ export const pointLogs = sqliteTable("point_logs", {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
+  // Set when an admin cancels this entry. The points are reversed out of
+  // teams.currentPoints (and users.points, if userId is set) at that moment,
+  // but the row itself is kept — never deleted — so the audit trail stays
+  // intact and the entry can be shown crossed out in the history.
+  canceledAt: integer("canceled_at", { mode: "timestamp_ms" }),
+  canceledById: text("canceled_by_id").references(() => users.id),
 });
 
 // A fine a leader issues to a specific camper for misbehavior. reason is

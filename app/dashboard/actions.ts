@@ -114,6 +114,146 @@ export async function addTeamPointsAction(
   return { success: true };
 }
 
+export async function cancelPointLogAction(logId: string): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isAdminRole(currentUser.role)) {
+    return { error: "Doar administratorii pot anula puncte." };
+  }
+
+  const db = await getDb();
+  const [log] = await db
+    .select({
+      id: pointLogs.id,
+      teamId: pointLogs.teamId,
+      userId: pointLogs.userId,
+      amount: pointLogs.amount,
+      canceledAt: pointLogs.canceledAt,
+    })
+    .from(pointLogs)
+    .where(eq(pointLogs.id, logId))
+    .limit(1);
+  if (!log) {
+    return { error: "Înregistrarea nu a fost găsită." };
+  }
+  if (log.canceledAt) {
+    return { error: "Această înregistrare a fost deja anulată." };
+  }
+
+  const canceledAt = new Date();
+  if (log.userId) {
+    await db.batch([
+      db
+        .update(pointLogs)
+        .set({ canceledAt, canceledById: currentUser.id })
+        .where(eq(pointLogs.id, logId)),
+      db
+        .update(teams)
+        .set({ currentPoints: sql`${teams.currentPoints} - ${log.amount}` })
+        .where(eq(teams.id, log.teamId)),
+      db
+        .update(users)
+        .set({ points: sql`${users.points} - ${log.amount}` })
+        .where(eq(users.id, log.userId)),
+    ]);
+  } else {
+    await db.batch([
+      db
+        .update(pointLogs)
+        .set({ canceledAt, canceledById: currentUser.id })
+        .where(eq(pointLogs.id, logId)),
+      db
+        .update(teams)
+        .set({ currentPoints: sql`${teams.currentPoints} - ${log.amount}` })
+        .where(eq(teams.id, log.teamId)),
+    ]);
+  }
+
+  revalidatePath("/dashboard");
+  return {};
+}
+
+const editPointLogSchema = z.object({
+  amount: z.coerce.number().int("Numărul de puncte trebuie să fie întreg."),
+  reason: z.string().trim().max(280).optional(),
+});
+
+export type EditPointLogResult = { error?: string };
+
+export async function editPointLogAction(
+  logId: string,
+  amount: number,
+  reason: string,
+): Promise<EditPointLogResult> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isAdminRole(currentUser.role)) {
+    return { error: "Doar administratorii pot modifica puncte." };
+  }
+
+  const parsed = editPointLogSchema.safeParse({ amount, reason: reason || undefined });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Date invalide." };
+  }
+
+  const db = await getDb();
+  const [log] = await db
+    .select({
+      id: pointLogs.id,
+      teamId: pointLogs.teamId,
+      userId: pointLogs.userId,
+      amount: pointLogs.amount,
+      canceledAt: pointLogs.canceledAt,
+    })
+    .from(pointLogs)
+    .where(eq(pointLogs.id, logId))
+    .limit(1);
+  if (!log) {
+    return { error: "Înregistrarea nu a fost găsită." };
+  }
+  if (log.canceledAt) {
+    return { error: "O înregistrare anulată nu poate fi modificată." };
+  }
+
+  const delta = parsed.data.amount - log.amount;
+  const newReason = parsed.data.reason ?? null;
+
+  if (delta === 0) {
+    await db.update(pointLogs).set({ reason: newReason }).where(eq(pointLogs.id, logId));
+    revalidatePath("/dashboard");
+    return {};
+  }
+
+  if (log.userId) {
+    await db.batch([
+      db
+        .update(pointLogs)
+        .set({ amount: parsed.data.amount, reason: newReason })
+        .where(eq(pointLogs.id, logId)),
+      db
+        .update(teams)
+        .set({ currentPoints: sql`${teams.currentPoints} + ${delta}` })
+        .where(eq(teams.id, log.teamId)),
+      db
+        .update(users)
+        .set({ points: sql`${users.points} + ${delta}` })
+        .where(eq(users.id, log.userId)),
+    ]);
+  } else {
+    await db.batch([
+      db
+        .update(pointLogs)
+        .set({ amount: parsed.data.amount, reason: newReason })
+        .where(eq(pointLogs.id, logId)),
+      db
+        .update(teams)
+        .set({ currentPoints: sql`${teams.currentPoints} + ${delta}` })
+        .where(eq(teams.id, log.teamId)),
+    ]);
+  }
+
+  revalidatePath("/dashboard");
+  return {};
+}
+
 export type AddFineState = {
   error?: string;
   success?: boolean;
