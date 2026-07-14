@@ -4,6 +4,7 @@ export type ShopCategory =
   | "ciocolata-batoane"
   | "biscuiti-napolitane"
   | "porumb-dulce"
+  | "inghetata"
   | "bauturi"
   | "guma-menta"
   | "igiena";
@@ -14,6 +15,7 @@ export const SHOP_CATEGORY_LABELS: Record<ShopCategory, string> = {
   "ciocolata-batoane": "Ciocolată & Batoane",
   "biscuiti-napolitane": "Biscuiți & Napolitane",
   "porumb-dulce": "Porumb dulce",
+  inghetata: "Înghețată",
   bauturi: "Băuturi",
   "guma-menta": "Gumă & Mentă",
   igiena: "Igienă",
@@ -25,6 +27,7 @@ export const SHOP_CATEGORY_ORDER: ShopCategory[] = [
   "ciocolata-batoane",
   "biscuiti-napolitane",
   "porumb-dulce",
+  "inghetata",
   "bauturi",
   "guma-menta",
   "igiena",
