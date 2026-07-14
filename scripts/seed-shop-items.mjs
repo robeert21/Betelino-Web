@@ -69,7 +69,7 @@ const items = [
   ["Arahide prăjite și sărate", "chipsuri-snacks", 700, 1, null],
   ["Caju prăjit", "chipsuri-snacks", null, 1, [["Sărat", 1100], ["Nesărat", 1100]]],
   ["Fistic", "chipsuri-snacks", 2000, 1, null],
-  ["Înghețată pe băț", "inghetata", null, 1, [["Ciocolată normală - Almond", 366], ["Ciocolată albă - Almond", 366]]],
+  ["Înghețată pe băț", "inghetata", null, 1, [["Ciocolată normală - Almond", 500], ["Ciocolată albă - Almond", 500]]],
   ["Apa plată Alcalina - 1.5L", "bauturi", 600, 1, null],
   ["Apa plată Dorna - 0.5L", "bauturi", 450, 1, null],
   ["Apă minerală carbogazificată Bucovina - 0.5L", "bauturi", 450, 1, null],
