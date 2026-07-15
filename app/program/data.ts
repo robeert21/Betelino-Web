@@ -15,6 +15,41 @@ export type ScheduleDay = {
 
 export const SCHEDULE: ScheduleDay[] = [
   {
+    slug: "ziua-3",
+    label: "Ziua 3",
+    date: "Miercuri, 15.07.2026",
+    dateISO: "2026-07-15",
+    items: [
+      { time: "08:30", activity: "Deșteptarea!" },
+      { time: "08:40 – 09:00", activity: "Înviorarea de dimineață", location: "Teren sport" },
+      { time: "09:00 – 09:30", activity: "Curățenie și îngrijire personală" },
+      { time: "09:30 – 10:15", activity: "Micul dejun", location: "Sala de mese" },
+      { time: "10:15 – 10:30", activity: "Părtășie pe cabane" },
+      { time: "10:30 – 11:00", activity: "Timp liber" },
+      { time: "11:00 – 13:30", activity: "Lecția nr. 3", location: "Sala de mese" },
+      { time: "14:00 – 15:00", activity: "Prânzul", location: "Sala de mese" },
+      { time: "15:00 – 16:00", activity: "Timp liber, odihnă sau campionat fotbal" },
+      { time: "16:00 – 16:30", activity: "Gustare" },
+      { time: "16:30 – 19:00", activity: "Lecția nr. 4", location: "Sala de mese" },
+      { time: "19:30 – 20:30", activity: "Cina", location: "Sala de mese" },
+      { time: "20:30 – 21:00", activity: "Timp liber" },
+      {
+        time: "21:00 – 22:00",
+        activity: "Magazin, jocuri de interior și exterior, socializare",
+      },
+      {
+        time: "22:00 – 00:30",
+        activity: "Semifinala Anglia - Argentina",
+        location: "Sala de mese",
+        optional: true,
+      },
+      {
+        time: "00:00 – 02:00",
+        activity: "Stingerea (discuții în cameră, jocuri, igienă, odihnă)",
+      },
+    ],
+  },
+  {
     slug: "ziua-2",
     label: "Ziua 2",
     date: "Marți, 14.07.2026",
