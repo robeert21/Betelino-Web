@@ -16,6 +16,7 @@ import {
   stationMaterials,
 } from "@/db/schema";
 import { getCurrentUser, isLeaderRole, isAdminRole } from "@/lib/auth";
+import { getRecentPointLogs, POINT_LOGS_PAGE_SIZE, type PointLogEntry } from "./data";
 
 const ASSIGNABLE_ROLES = ["CAMPER", "STAFF", "ADMIN", "CALAUZA"] as const;
 
@@ -252,6 +253,18 @@ export async function editPointLogAction(
 
   revalidatePath("/dashboard");
   return {};
+}
+
+export async function getMorePointLogsAction(offset: number): Promise<{
+  logs: PointLogEntry[];
+  error?: string;
+}> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    return { logs: [], error: "Trebuie să fii autentificat." };
+  }
+  const logs = await getRecentPointLogs(POINT_LOGS_PAGE_SIZE, offset);
+  return { logs };
 }
 
 export type AddFineState = {

@@ -1,6 +1,7 @@
 import {
   getTeamsWithPoints,
   getRecentPointLogs,
+  getPointLogsCount,
   getLeaderboardLastSyncedAt,
   getCamperMembers,
   getTeamMemberBreakdown,
@@ -18,13 +19,15 @@ export default async function DashboardPointsPage() {
   const currentUser = await getCurrentUser();
   const isAdmin = !!currentUser && isAdminRole(currentUser.role);
 
-  const [teams, members, memberBreakdown, logs, leaderboardLastSyncedAt] = await Promise.all([
-    getTeamsWithPoints(),
-    getCamperMembers(),
-    getTeamMemberBreakdown(),
-    getRecentPointLogs(),
-    isAdmin ? getLeaderboardLastSyncedAt() : Promise.resolve(null),
-  ]);
+  const [teams, members, memberBreakdown, logs, logsTotal, leaderboardLastSyncedAt] =
+    await Promise.all([
+      getTeamsWithPoints(),
+      getCamperMembers(),
+      getTeamMemberBreakdown(),
+      getRecentPointLogs(),
+      getPointLogsCount(),
+      isAdmin ? getLeaderboardLastSyncedAt() : Promise.resolve(null),
+    ]);
 
   return (
     <div>
@@ -50,6 +53,7 @@ export default async function DashboardPointsPage() {
         teams={teams}
         memberBreakdown={memberBreakdown}
         logs={logs}
+        logsTotal={logsTotal}
         isAdmin={isAdmin}
         currentUserName={currentUser?.name ?? "un administrator"}
       />

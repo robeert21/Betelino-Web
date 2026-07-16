@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { TeamWithPoints, TeamMemberBreakdown, PointLogEntry } from "./data";
 import { CancelPointsSection } from "./CancelPointsSection";
+import { getMorePointLogsAction } from "./actions";
 
 type TabSlug = "echipe" | "individual" | "istoric" | "anuleaza";
 
@@ -18,19 +19,36 @@ export function DashboardPointsTabs({
   teams,
   memberBreakdown,
   logs,
+  logsTotal,
   isAdmin,
   currentUserName,
 }: {
   teams: TeamWithPoints[];
   memberBreakdown: TeamMemberBreakdown[];
   logs: PointLogEntry[];
+  logsTotal: number;
   isAdmin: boolean;
   currentUserName: string;
 }) {
   const [activeTab, setActiveTab] = useState<TabSlug>("echipe");
   const [liveLogs, setLiveLogs] = useState(logs);
+  const [isLoadingMore, startLoadingMore] = useTransition();
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
   const activeLogCount = liveLogs.filter((log) => !log.canceledAt).length;
+  const hasMoreLogs = liveLogs.length < logsTotal;
+
+  function handleLoadMore() {
+    setLoadMoreError(null);
+    startLoadingMore(async () => {
+      const result = await getMorePointLogsAction(liveLogs.length);
+      if (result.error) {
+        setLoadMoreError(result.error);
+        return;
+      }
+      setLiveLogs((current) => [...current, ...result.logs]);
+    });
+  }
 
   function handleCanceled(logId: string) {
     setLiveLogs((current) =>
@@ -56,7 +74,7 @@ export function DashboardPointsTabs({
           ? String(memberBreakdown.reduce((sum, team) => sum + team.members.length, 0))
           : undefined,
     },
-    { slug: "istoric", label: "Istoric", hint: liveLogs.length > 0 ? String(liveLogs.length) : undefined },
+    { slug: "istoric", label: "Istoric", hint: logsTotal > 0 ? String(logsTotal) : undefined },
     ...(isAdmin
       ? [
           {
@@ -227,13 +245,57 @@ export function DashboardPointsTabs({
                 ))}
               </div>
             )}
+            {hasMoreLogs && (
+              <LoadMoreLogsButton
+                isLoading={isLoadingMore}
+                error={loadMoreError}
+                onClick={handleLoadMore}
+                remaining={logsTotal - liveLogs.length}
+              />
+            )}
           </div>
         )}
 
         {activeTab === "anuleaza" && isAdmin && (
-          <CancelPointsSection logs={liveLogs} onCanceled={handleCanceled} onEdited={handleEdited} />
+          <div>
+            <CancelPointsSection logs={liveLogs} onCanceled={handleCanceled} onEdited={handleEdited} />
+            {hasMoreLogs && (
+              <LoadMoreLogsButton
+                isLoading={isLoadingMore}
+                error={loadMoreError}
+                onClick={handleLoadMore}
+                remaining={logsTotal - liveLogs.length}
+              />
+            )}
+          </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function LoadMoreLogsButton({
+  isLoading,
+  error,
+  onClick,
+  remaining,
+}: {
+  isLoading: boolean;
+  error: string | null;
+  onClick: () => void;
+  remaining: number;
+}) {
+  return (
+    <div className="mt-6 flex flex-col items-center gap-2">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={isLoading}
+        className="rounded-full border border-border-sand px-5 py-2.5 text-sm font-medium text-ink-umber-soft transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-sage-trust/50 hover:text-ink-umber disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isLoading ? "Se încarcă…" : `Încarcă mai multe (${remaining} rămase)`}
+      </button>
+      {error && <p className="text-xs text-signal-red">{error}</p>}
     </div>
   );
 }

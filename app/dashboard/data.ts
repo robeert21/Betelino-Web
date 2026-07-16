@@ -1,4 +1,4 @@
-import { and, desc, eq, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { getDb } from "@/db";
 import {
@@ -240,7 +240,12 @@ export type PointLogEntry = {
   canceledByName: string | null;
 };
 
-export async function getRecentPointLogs(limit = 5000): Promise<PointLogEntry[]> {
+export const POINT_LOGS_PAGE_SIZE = 100;
+
+export async function getRecentPointLogs(
+  limit = POINT_LOGS_PAGE_SIZE,
+  offset = 0,
+): Promise<PointLogEntry[]> {
   const db = await getDb();
   const createdByUsers = alias(users, "created_by_users");
   const memberUsers = alias(users, "member_users");
@@ -264,7 +269,8 @@ export async function getRecentPointLogs(limit = 5000): Promise<PointLogEntry[]>
     .leftJoin(memberUsers, eq(pointLogs.userId, memberUsers.id))
     .leftJoin(canceledByUsers, eq(pointLogs.canceledById, canceledByUsers.id))
     .orderBy(desc(pointLogs.createdAt))
-    .limit(limit);
+    .limit(limit)
+    .offset(offset);
 
   return rows.map((row) => ({
     ...row,
@@ -272,6 +278,12 @@ export async function getRecentPointLogs(limit = 5000): Promise<PointLogEntry[]>
     canceledAt: row.canceledAt ?? null,
     canceledByName: row.canceledByName ?? null,
   }));
+}
+
+export async function getPointLogsCount(): Promise<number> {
+  const db = await getDb();
+  const [row] = await db.select({ count: count() }).from(pointLogs);
+  return row?.count ?? 0;
 }
 
 export type FineEntry = {
