@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { assignTeamAction, assignRoleAction, assignCabinAction, deleteMemberAction } from "./actions";
+import {
+  assignTeamAction,
+  assignRoleAction,
+  assignCabinAction,
+  deleteMemberAction,
+  resetMemberPasswordAction,
+} from "./actions";
 import type { MemberEntry, TeamWithPoints } from "./data";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -178,6 +184,9 @@ function useMemberControls(member: MemberEntry, onRemoved: (id: string) => void)
   const [cabinError, setCabinError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleTeamChange(value: string) {
@@ -236,6 +245,24 @@ function useMemberControls(member: MemberEntry, onRemoved: (id: string) => void)
     });
   }
 
+  function handleResetPassword() {
+    if (!confirmingReset) {
+      setConfirmingReset(true);
+      return;
+    }
+    setResetError(null);
+    startTransition(async () => {
+      const result = await resetMemberPasswordAction(member.id);
+      if (result.error) {
+        setResetError(result.error);
+        setConfirmingReset(false);
+      } else {
+        setTempPassword(result.tempPassword ?? null);
+        setConfirmingReset(false);
+      }
+    });
+  }
+
   return {
     teamId,
     role,
@@ -245,12 +272,18 @@ function useMemberControls(member: MemberEntry, onRemoved: (id: string) => void)
     cabinError,
     deleteError,
     confirmingDelete,
+    resetError,
+    confirmingReset,
+    tempPassword,
     isPending,
     handleTeamChange,
     handleRoleChange,
     handleCabinChange,
     handleDelete,
+    handleResetPassword,
     setConfirmingDelete,
+    setConfirmingReset,
+    setTempPassword,
   };
 }
 
@@ -338,6 +371,32 @@ function MemberRow({
       <td className="px-4 py-5 text-right">
         {isAdmin && !isSelf && (
           <div className="flex flex-col items-end gap-2">
+            {c.confirmingReset && (
+              <button
+                type="button"
+                onClick={() => c.setConfirmingReset(false)}
+                disabled={c.isPending}
+                className="text-xs font-medium text-ink-umber-soft transition-colors duration-200 ease-out hover:text-ink-umber disabled:opacity-60"
+              >
+                Anulează
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={c.handleResetPassword}
+              disabled={c.isPending}
+              className={`rounded-full px-4 py-2 text-xs font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep disabled:cursor-not-allowed disabled:opacity-60 ${
+                c.confirmingReset
+                  ? "bg-sage-trust text-warm-cream hover:bg-sage-deep"
+                  : "border border-border-sand text-ink-umber-soft hover:border-sage-trust/50 hover:text-ink-umber"
+              }`}
+            >
+              {c.isPending && !c.confirmingDelete
+                ? "Se resetează…"
+                : c.confirmingReset
+                  ? "Sigur, resetează"
+                  : "Resetează parola"}
+            </button>
             {c.confirmingDelete && (
               <button
                 type="button"
@@ -365,6 +424,12 @@ function MemberRow({
         {c.deleteError && (
           <p className="mt-2 max-w-[180px] text-right text-xs text-signal-red">{c.deleteError}</p>
         )}
+        {c.resetError && (
+          <p className="mt-2 max-w-[180px] text-right text-xs text-signal-red">{c.resetError}</p>
+        )}
+        {c.tempPassword && (
+          <TempPasswordCallout password={c.tempPassword} onDismiss={() => c.setTempPassword(null)} />
+        )}
       </td>
     </tr>
   );
@@ -384,7 +449,7 @@ function MemberCard({
   onRemoved: (id: string) => void;
 }) {
   const c = useMemberControls(member, onRemoved);
-  const hasFieldError = c.roleError || c.teamError || c.cabinError || c.deleteError;
+  const hasFieldError = c.roleError || c.teamError || c.cabinError || c.deleteError || c.resetError;
 
   return (
     <li className="rounded-[16px] bg-soft-linen px-6 py-5">
@@ -457,6 +522,28 @@ function MemberCard({
 
         {isAdmin && !isSelf && (
           <div className="ml-auto flex shrink-0 items-center gap-3">
+            {c.confirmingReset && (
+              <button
+                type="button"
+                onClick={() => c.setConfirmingReset(false)}
+                disabled={c.isPending}
+                className="text-xs font-medium text-ink-umber-soft transition-colors duration-200 ease-out hover:text-ink-umber disabled:opacity-60"
+              >
+                Anulează
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={c.handleResetPassword}
+              disabled={c.isPending}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-deep disabled:cursor-not-allowed disabled:opacity-60 ${
+                c.confirmingReset
+                  ? "bg-sage-trust text-warm-cream hover:bg-sage-deep"
+                  : "border border-border-sand text-ink-umber-soft hover:border-sage-trust/50 hover:text-ink-umber"
+              }`}
+            >
+              {c.confirmingReset ? "Sigur, resetează" : "Resetează parola"}
+            </button>
             {c.confirmingDelete && (
               <button
                 type="button"
@@ -485,9 +572,60 @@ function MemberCard({
 
       {hasFieldError && (
         <p className="mt-2 text-xs text-signal-red">
-          {c.roleError || c.teamError || c.cabinError || c.deleteError}
+          {c.roleError || c.teamError || c.cabinError || c.deleteError || c.resetError}
         </p>
       )}
+      {c.tempPassword && (
+        <TempPasswordCallout password={c.tempPassword} onDismiss={() => c.setTempPassword(null)} />
+      )}
     </li>
+  );
+}
+
+function TempPasswordCallout({
+  password,
+  onDismiss,
+}: {
+  password: string;
+  onDismiss: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(password);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access may be unavailable; the password is still shown on screen.
+    }
+  }
+
+  return (
+    <div className="mt-3 max-w-xs rounded-[10px] border border-sage-trust/40 bg-sage-trust/10 px-4 py-3 text-left">
+      <p className="text-xs font-medium text-ink-umber">Parolă nouă temporară:</p>
+      <p className="mt-1 select-all break-all font-mono text-sm font-semibold text-ink-umber">
+        {password}
+      </p>
+      <p className="mt-1 text-xs text-ink-umber-soft">
+        Transmite-o membrului acum — nu va mai fi afișată din nou.
+      </p>
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="text-xs font-medium text-sage-deep transition-colors duration-200 ease-out hover:text-sage-trust"
+        >
+          {copied ? "Copiat!" : "Copiază"}
+        </button>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="text-xs font-medium text-ink-umber-soft transition-colors duration-200 ease-out hover:text-ink-umber"
+        >
+          Ascunde
+        </button>
+      </div>
+    </div>
   );
 }

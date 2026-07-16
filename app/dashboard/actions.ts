@@ -15,7 +15,7 @@ import {
   stationFolders,
   stationMaterials,
 } from "@/db/schema";
-import { getCurrentUser, isLeaderRole, isAdminRole } from "@/lib/auth";
+import { getCurrentUser, isLeaderRole, isAdminRole, hashPassword } from "@/lib/auth";
 import { getRecentPointLogs, POINT_LOGS_PAGE_SIZE, type PointLogEntry } from "./data";
 
 const ASSIGNABLE_ROLES = ["CAMPER", "STAFF", "ADMIN", "CALAUZA"] as const;
@@ -557,6 +557,38 @@ export async function deleteMemberAction(userId: string): Promise<{ error?: stri
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/membri");
   return {};
+}
+
+const TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+
+function generateTempPassword(length = 10): string {
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += TEMP_PASSWORD_ALPHABET[Math.floor(Math.random() * TEMP_PASSWORD_ALPHABET.length)];
+  }
+  return result;
+}
+
+export async function resetMemberPasswordAction(
+  userId: string,
+): Promise<{ error?: string; tempPassword?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isAdminRole(currentUser.role)) {
+    return { error: "Doar administratorii pot reseta parole." };
+  }
+
+  const db = await getDb();
+  const [member] = await db.select({ id: users.id }).from(users).where(eq(users.id, userId)).limit(1);
+  if (!member) {
+    return { error: "Membrul nu a fost găsit." };
+  }
+
+  const tempPassword = generateTempPassword();
+  const passwordHash = await hashPassword(tempPassword);
+
+  await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+
+  return { tempPassword };
 }
 
 export type CreateFolderState = {
