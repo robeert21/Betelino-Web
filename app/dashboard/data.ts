@@ -240,7 +240,7 @@ export type PointLogEntry = {
   canceledByName: string | null;
 };
 
-export async function getRecentPointLogs(limit = 500): Promise<PointLogEntry[]> {
+export async function getRecentPointLogs(limit = 5000): Promise<PointLogEntry[]> {
   const db = await getDb();
   const createdByUsers = alias(users, "created_by_users");
   const memberUsers = alias(users, "member_users");
