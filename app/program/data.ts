@@ -15,6 +15,19 @@ export type ScheduleDay = {
 
 export const SCHEDULE: ScheduleDay[] = [
   {
+    slug: "ziua-5",
+    label: "Ziua 5",
+    date: "Vineri, 17.07.2026",
+    dateISO: "2026-07-17",
+    items: [
+      { time: "08:30", activity: "Deșteptarea!" },
+      { time: "08:40 – 09:00", activity: "Înviorarea de dimineață", location: "Teren sport" },
+      { time: "09:00 – 09:30", activity: "Curățenie și îngrijire personala" },
+      { time: "09:30 – 10:00", activity: "Micul dejun", location: "Sala de mese" },
+      { time: "10:00 – 10:30", activity: "Curățenie generală și plecare în excursie" },
+    ],
+  },
+  {
     slug: "ziua-4",
     label: "Ziua 4",
     date: "Joi, 16.07.2026",

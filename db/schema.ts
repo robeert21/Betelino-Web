@@ -203,6 +203,52 @@ export const stationMaterials = sqliteTable("station_materials", {
     .$defaultFn(() => new Date()),
 });
 
+// A photo or video uploaded by an admin, stored in R2 under fileKey (prefix
+// "gallery/"), visible and downloadable by every camper/leader.
+export const galleryItems = sqliteTable("gallery_items", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  fileKey: text("file_key").notNull(),
+  thumbKey: text("thumb_key"),
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  caption: text("caption"),
+  uploadedById: text("uploaded_by_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+// A note sent to a specific leader, or to no one in particular (targetLeaderId
+// null means the sender picked "Toți liderii" and every leader sees it as
+// general feedback). Only leaders can see the inbox (/dashboard/feedback);
+// campers only ever submit. Submitting doesn't require an account, so userId
+// is null for anonymous senders; when set, it's kept for moderation only —
+// never surfaced in the UI. authorName is a free-text display name the sender
+// optionally types in; when null the note shows as "Anonim" to the leader,
+// even though userId (if set) still identifies them internally.
+export const feedback = sqliteTable("feedback", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  targetLeaderId: text("target_leader_id").references(() => users.id, { onDelete: "cascade" }),
+  authorName: text("author_name"),
+  message: text("message").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  // Set when a leader/admin removes an inappropriate note. The row is kept
+  // — never deleted — matching the audit-trail pattern used for fines and
+  // point logs; hidden notes are simply excluded from the inbox listing.
+  hiddenAt: integer("hidden_at", { mode: "timestamp_ms" }),
+  hiddenById: text("hidden_by_id").references(() => users.id),
+});
+
 // One row per user per calendar day (dateKey, e.g. "2026-07-09"). selected
 // is the chosen option index, or null when the 15s timer ran out unanswered.
 // A new dateKey each day naturally resets the game — no cleanup needed.

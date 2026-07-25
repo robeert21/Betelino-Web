@@ -14,6 +14,7 @@ import {
   stations,
   stationFolders,
   stationMaterials,
+  galleryItems,
 } from "@/db/schema";
 import { getCurrentUser, isLeaderRole, isAdminRole, hashPassword } from "@/lib/auth";
 import { getRecentPointLogs, POINT_LOGS_PAGE_SIZE, type PointLogEntry } from "./data";
@@ -689,5 +690,33 @@ export async function deleteMaterialAction(materialId: string): Promise<{ error?
       ? `/dashboard/materiale/${material.stationId}/${material.folderId}`
       : `/dashboard/materiale/${material.stationId}`,
   );
+  return {};
+}
+
+export async function deleteGalleryItemAction(itemId: string): Promise<{ error?: string }> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !isAdminRole(currentUser.role)) {
+    return { error: "Nu ai acces la această acțiune." };
+  }
+
+  const db = await getDb();
+  const [item] = await db
+    .select({ id: galleryItems.id, fileKey: galleryItems.fileKey, thumbKey: galleryItems.thumbKey })
+    .from(galleryItems)
+    .where(eq(galleryItems.id, itemId))
+    .limit(1);
+  if (!item) {
+    return { error: "Fișierul nu a fost găsit." };
+  }
+
+  const { env } = await getCloudflareContext({ async: true });
+  await env.MATERIALS.delete(item.fileKey);
+  if (item.thumbKey) {
+    await env.MATERIALS.delete(item.thumbKey);
+  }
+  await db.delete(galleryItems).where(eq(galleryItems.id, itemId));
+
+  revalidatePath("/dashboard/galerie");
+  revalidatePath("/galerie");
   return {};
 }

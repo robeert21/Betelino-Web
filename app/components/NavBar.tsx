@@ -8,8 +8,10 @@ const BASE_ROUTES = [
   { href: "/", label: "Acasă", shortLabel: "Acasă", icon: HomeIcon },
   { href: "/clasament", label: "Clasament", shortLabel: "Clasament", icon: TrophyIcon },
   { href: "/program", label: "Program", shortLabel: "Program", icon: CalendarIcon },
+  { href: "/galerie", label: "Galerie", shortLabel: "Galerie", icon: GalleryIcon },
   { href: "/regulamente", label: "Regulamente", shortLabel: "Reguli", icon: BookIcon },
   { href: "/magazin", label: "Magazin", shortLabel: "Magazin", icon: BagIcon },
+  { href: "/feedback", label: "Feedback", shortLabel: "Feedback", icon: HeartIcon },
   { href: "/cont", label: "Contul meu", shortLabel: "Cont", icon: UserIcon },
 ];
 
@@ -20,9 +22,13 @@ const DASHBOARD_ROUTE = {
   icon: TeamIcon,
 };
 
+const ACCOUNT_ROUTE = BASE_ROUTES.find((route) => route.href === "/cont")!;
+
 export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
   const pathname = usePathname();
   const ROUTES = isLeader ? [...BASE_ROUTES, DASHBOARD_ROUTE] : BASE_ROUTES;
+  const MOBILE_BAR_ROUTES = ROUTES.filter((route) => route.href !== "/cont");
+  const isAccountActive = pathname.startsWith("/cont");
 
   return (
     <>
@@ -69,7 +75,8 @@ export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
         </div>
       </header>
 
-      <header className="sticky top-0 z-40 flex md:hidden items-center justify-center bg-forest-night px-6 py-3 shadow-[0_1px_0_0_var(--color-forest-mist)]">
+      <header className="sticky top-0 z-40 flex md:hidden items-center justify-between bg-forest-night px-4 py-3 shadow-[0_1px_0_0_var(--color-forest-mist)]">
+        <span className="w-9" aria-hidden="true" />
         <Link href="/" className="flex items-center">
           <Image
             src="/camp-logo.png"
@@ -80,10 +87,21 @@ export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
             className="h-9 w-auto"
           />
         </Link>
+        <Link
+          href="/cont"
+          aria-label="Contul meu"
+          className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-200 ${
+            isAccountActive
+              ? "bg-amber-glow/20 text-amber-glow"
+              : "text-warm-cream/70 hover:text-warm-cream"
+          }`}
+        >
+          <UserIcon active={isAccountActive} />
+        </Link>
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 flex md:hidden border-t border-border-sand bg-warm-cream">
-        {ROUTES.map((route) => {
+        {MOBILE_BAR_ROUTES.map((route) => {
           const isActive =
             route.href === "/"
               ? pathname === "/"
@@ -94,7 +112,7 @@ export function NavBar({ isLeader = false }: { isLeader?: boolean }) {
               key={route.href}
               href={route.href}
               className={`flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-1 whitespace-nowrap px-0.5 text-[0.6875rem] font-semibold transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-95 ${
-                ROUTES.length > 6 ? "text-[0.625rem]" : ""
+                MOBILE_BAR_ROUTES.length > 6 ? "text-[0.625rem]" : ""
               } ${isActive ? "text-sage-deep" : "text-ink-umber-soft"}`}
             >
               <Icon active={isActive} />
@@ -170,6 +188,25 @@ function TeamIcon({ active }: { active: boolean }) {
       <circle cx="16" cy="9.5" r="2.5" />
       <path d="M3 20c.7-3.2 2.9-5 5.5-5s4.8 1.8 5.5 5" />
       <path d="M14.5 15.2c2.1.3 3.6 1.9 4.2 4.8" />
+    </svg>
+  );
+}
+
+function GalleryIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+      <circle cx="9" cy="10" r="1.75" />
+      <path d="M4.5 17.5 9.5 12.5a1.5 1.5 0 0 1 2.1 0l1.9 1.9" />
+      <path d="M13.5 15.5 16 13a1.5 1.5 0 0 1 2.1 0l1.4 1.4" />
+    </svg>
+  );
+}
+
+function HeartIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20.2c-.3 0-.6-.1-.8-.3-1.9-1.6-3.6-3-5-4.4-1.8-1.8-3.2-3.6-3.2-5.8 0-2.4 1.9-4.2 4.2-4.2 1.4 0 2.7.7 3.6 1.9C11.6 6.1 12.9 5.5 14.3 5.5c2.3 0 4.2 1.8 4.2 4.2 0 2.2-1.4 4-3.2 5.8-1.4 1.4-3.1 2.8-5 4.4-.2.2-.5.3-.8.3Z" />
     </svg>
   );
 }

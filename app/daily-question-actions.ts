@@ -1,12 +1,10 @@
 "use server";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { dailyQuestionAnswers, teams, users, pointLogs } from "@/db/schema";
+import { dailyQuestionAnswers } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { DAILY_QUESTIONS, questionIndexFor } from "./daily-question-data";
-
-const CORRECT_ANSWER_POINTS = 1;
 
 export async function submitDailyAnswer(
   dateKey: string,
@@ -33,30 +31,7 @@ export async function submitDailyAnswer(
     return { success: true };
   }
 
-  const isCorrect = selected !== null && selected === question.correctIndex;
-
-  if (isCorrect && user.teamId) {
-    await db.batch([
-      db.insert(dailyQuestionAnswers).values({ userId: user.id, dateKey, selected }),
-      db.insert(pointLogs).values({
-        teamId: user.teamId,
-        userId: user.id,
-        amount: CORRECT_ANSWER_POINTS,
-        reason: "Răspuns corect la întrebarea zilei",
-        createdById: user.id,
-      }),
-      db
-        .update(teams)
-        .set({ currentPoints: sql`${teams.currentPoints} + ${CORRECT_ANSWER_POINTS}` })
-        .where(eq(teams.id, user.teamId)),
-      db
-        .update(users)
-        .set({ points: sql`${users.points} + ${CORRECT_ANSWER_POINTS}` })
-        .where(eq(users.id, user.id)),
-    ]);
-  } else {
-    await db.insert(dailyQuestionAnswers).values({ userId: user.id, dateKey, selected });
-  }
+  await db.insert(dailyQuestionAnswers).values({ userId: user.id, dateKey, selected });
 
   return { success: true };
 }

@@ -18,8 +18,10 @@ export function DashboardNav({
     { href: "/dashboard/amenzi", label: "Amenzi" },
     { href: "/dashboard/materiale", label: "Materiale" },
     { href: "/dashboard/solicitari", label: "Solicitări" },
+    { href: "/dashboard/feedback", label: "Feedback" },
     ...(isCalauza || isAdmin ? [{ href: "/dashboard/echipa", label: "Membrii echipei" }] : []),
     ...(isAdmin ? [{ href: "/dashboard/membri", label: "Membri" }] : []),
+    ...(isAdmin ? [{ href: "/dashboard/galerie", label: "Galerie" }] : []),
   ];
 
   return (

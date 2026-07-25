@@ -9,6 +9,7 @@ const PAGES = [
   { path: "/clasament", name: "clasament" },
   { path: "/regulamente", name: "regulamente" },
   { path: "/magazin", name: "magazin" },
+  { path: "/feedback", name: "feedback" },
   { path: "/cont", name: "cont" },
 ];
 

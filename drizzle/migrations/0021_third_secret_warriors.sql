@@ -1,0 +1,1 @@
+ALTER TABLE `gallery_items` ADD `thumb_key` text;
